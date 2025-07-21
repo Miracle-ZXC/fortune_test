@@ -38,17 +38,16 @@
                 #ffcc33 315deg 360deg
             );
             box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
-            transition: transform 4s cubic-bezier(0.2, 0.8, 0.7, 1);
             z-index: 1;
         }
         .arrow {
             position: absolute;
-            top: -20px;
+            top: 0;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) rotate(180deg);
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
-            border-bottom: 30px solid #ffd700;
+            border-top: 30px solid #ffd700;
             z-index: 10;
         }
         .center-logo {
@@ -64,21 +63,22 @@
         }
         .sector-text {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
             pointer-events: none;
             z-index: 2;
         }
         .sector-text span {
             position: absolute;
-            left: 50%;
-            top: 25%;
-            transform-origin: 50% 75%;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #fff;
             text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
             white-space: nowrap;
+            transform-origin: 0 0;
+            text-align: left;
         }
         #spinButton {
             margin-top: 25px;
@@ -110,6 +110,7 @@
             animation: fadeIn 1s forwards;
         }
         @keyframes fadeIn {
+            from { opacity: 0; }
             to { opacity: 1; }
         }
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
@@ -120,14 +121,14 @@
         <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
-                <span style="transform: translate(-50%, -50%) rotate(22.5deg);">20 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(67.5deg);">30 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(112.5deg);">50 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(157.5deg);">75 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(202.5deg);">100 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(247.5deg);">125 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(292.5deg);">150 FS</span>
-                <span style="transform: translate(-50%, -50%) rotate(337.5deg);">Попробуй!</span>
+                <span style="transform: rotate(22.5deg) translate(-180px, 0px);">20 FS</span>
+                <span style="transform: rotate(67.5deg) translate(-180px, 0px);">30 FS</span>
+                <span style="transform: rotate(112.5deg) translate(-180px, 0px);">50 FS</span>
+                <span style="transform: rotate(157.5deg) translate(-180px, 0px);">75 FS</span>
+                <span style="transform: rotate(202.5deg) translate(-180px, 0px);">100 FS</span>
+                <span style="transform: rotate(247.5deg) translate(-180px, 0px);">125 FS</span>
+                <span style="transform: rotate(292.5deg) translate(-180px, 0px);">150 FS</span>
+                <span style="transform: rotate(337.5deg) translate(-180px, 0px);">Попробуй!</span>
             </div>
             <div class="center-logo">Baboss</div>
         </div>
@@ -141,8 +142,9 @@
         const resultDiv = document.getElementById('result');
 
         const prizes = ["20 фриспинов", "30 фриспинов", "50 фриспинов", "75 фриспинов", "100 фриспинов", "125 фриспинов", "150 фриспинов", "Попробуй еще!"];
-        const weights = [0.25, 0.2, 0.15, 0.1, 0.05, 0.03, 0.02, 0.2]; // Вероятности
-        const angles = [0, 45, 90, 135, 180, 225, 270, 315]; // Углы секторов
+        const weights = [0.25, 0.2, 0.15, 0.1, 0.05, 0.03, 0.02, 0.2];
+        const sectorSize = 45;
+        const safeZone = 5;
         let isSpinning = false;
 
         spinButton.addEventListener('click', () => {
@@ -151,31 +153,45 @@
             spinButton.disabled = true;
             resultDiv.textContent = '';
 
-            // Рандомизация с учетом весов
-            const totalWeight = weights.reduce((a, b) => a + b, 0);
-            let random = Math.random() * totalWeight;
-            let randomIndex = 0;
-            for (let i = 0; i < weights.length; i++) {
-                random -= weights[i];
-                if (random <= 0) {
-                    randomIndex = i;
-                    break;
-                }
-            }
-
-            const prize = prizes[randomIndex];
-            // Вычисляем угол так, чтобы выбранный сектор оказался под стрелкой (0 градусов)
-            const angle = (360 - angles[randomIndex] + 360) % 360;
-            const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360; // 3-5 оборотов
-            const finalAngle = angle + randomExtraSpins;
-
-            wheel.style.transform = `rotate(${finalAngle}deg)`;
-
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)';
             setTimeout(() => {
-                resultDiv.textContent = `Ты выиграл: ${prize}!`;
-                isSpinning = false;
-                spinButton.disabled = false;
-            }, 4000); // Время анимации (4 секунды)
+                wheel.style.transition = 'transform 5s cubic-bezier(0.2, 0.8, 0.7, 1)';
+
+                const totalWeight = weights.reduce((a, b) => a + b, 0);
+                let random = Math.random() * totalWeight;
+                let randomIndex = 0;
+                for (let i = 0; i < weights.length; i++) {
+                    random -= weights[i];
+                    if (random <= 0) {
+                        randomIndex = i;
+                        break;
+                    }
+                }
+
+                const prize = prizes[randomIndex];
+                const sectorStart = randomIndex * sectorSize;
+                const sectorEnd = sectorStart + sectorSize;
+                const safeStart = sectorStart + safeZone;
+                const safeEnd = sectorEnd - safeZone;
+                const randomAngle = Math.random() * (safeEnd - safeStart) + safeStart;
+                const angle = (360 - randomAngle + 360) % 360;
+                const minSpins = 2 * 360;
+                const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360;
+                const finalAngle = angle + minSpins + randomExtraSpins;
+
+                wheel.style.transform = `rotate(${finalAngle}deg)`;
+
+                setTimeout(() => {
+                    resultDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        resultDiv.textContent = `Ты выиграл: ${prize}!`;
+                        resultDiv.style.opacity = '1';
+                    }, 100);
+                    isSpinning = false;
+                    spinButton.disabled = false;
+                }, 5000);
+            }, 10);
         });
     </script>
 </body>
