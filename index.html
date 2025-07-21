@@ -14,6 +14,7 @@
             margin: 0;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             font-family: 'Montserrat', Arial, sans-serif;
+            color: #fff;
         }
         .wheel-container {
             position: relative;
@@ -27,20 +28,20 @@
             position: relative;
             overflow: hidden;
             background: conic-gradient(
-                #ff4d4d 0deg 45deg,
+                #ff3366 0deg 45deg,
                 #4d79ff 45deg 90deg,
-                #4dff4d 90deg 135deg,
-                #ffff4d 135deg 180deg,
-                #ff4d4d 180deg 225deg,
+                #33ff99 90deg 135deg,
+                #ffcc33 135deg 180deg,
+                #ff3366 180deg 225deg,
                 #4d79ff 225deg 270deg,
-                #4dff4d 270deg 315deg,
-                #ffff4d 315deg 360deg
+                #33ff99 270deg 315deg,
+                #ffcc33 315deg 360deg
             );
             box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
             transition: transform 4s cubic-bezier(0.2, 0.8, 0.7, 1);
+            z-index: 1;
         }
-        #wheel::before {
-            content: '';
+        .arrow {
             position: absolute;
             top: -20px;
             left: 50%;
@@ -50,8 +51,7 @@
             border-bottom: 30px solid #ffd700;
             z-index: 10;
         }
-        #wheel::after {
-            content: 'Baboss';
+        .center-logo {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -60,24 +60,24 @@
             font-weight: bold;
             color: #ffd700;
             text-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
-            z-index: 10;
+            z-index: 5;
         }
         .sector-text {
             position: absolute;
             width: 100%;
             height: 100%;
             pointer-events: none;
-            z-index: 5;
+            z-index: 2;
         }
         .sector-text span {
             position: absolute;
             left: 50%;
-            top: 20%;
-            transform-origin: 50% 80%;
-            font-size: 16px;
+            top: 25%;
+            transform-origin: 50% 75%;
+            font-size: 18px;
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
             white-space: nowrap;
         }
         #spinButton {
@@ -85,15 +85,20 @@
             padding: 15px 40px;
             font-size: 22px;
             cursor: pointer;
-            background: linear-gradient(45deg, #ff4d4d, #ff8c00);
+            background: linear-gradient(45deg, #ff3366, #ff8c00);
             color: white;
             border: none;
             border-radius: 30px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s, opacity 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         #spinButton:hover {
             transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 99, 71, 0.7);
+        }
+        #spinButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         #result {
             margin-top: 20px;
@@ -112,6 +117,7 @@
 </head>
 <body>
     <div class="wheel-container">
+        <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
                 <span style="transform: translate(-50%, -50%) rotate(22.5deg);">20 FS</span>
@@ -123,6 +129,7 @@
                 <span style="transform: translate(-50%, -50%) rotate(292.5deg);">150 FS</span>
                 <span style="transform: translate(-50%, -50%) rotate(337.5deg);">Попробуй!</span>
             </div>
+            <div class="center-logo">Baboss</div>
         </div>
     </div>
     <button id="spinButton">Крутить!</button>
@@ -158,7 +165,7 @@
 
             const prize = prizes[randomIndex];
             // Вычисляем угол так, чтобы выбранный сектор оказался под стрелкой (0 градусов)
-            const angle = (360 - angles[randomIndex]) % 360;
+            const angle = (360 - angles[randomIndex] + 360) % 360;
             const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360; // 3-5 оборотов
             const finalAngle = angle + randomExtraSpins;
 
