@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо фортуны Baboss</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+        }
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            background: conic-gradient(
+                #ff4d4d 0deg 45deg,
+                #4d79ff 45deg 90deg,
+                #4dff4d 90deg 135deg,
+                #ffff4d 135deg 180deg,
+                #ff4d4d 180deg 225deg,
+                #4d79ff 225deg 270deg,
+                #4dff4d 270deg 315deg,
+                #ffff4d 315deg 360deg
+            );
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
+            transition: transform 4s cubic-bezier(0.2, 0.8, 0.7, 1);
+        }
+        #wheel::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 30px solid #ffd700;
+            z-index: 10;
+        }
+        #wheel::after {
+            content: 'Baboss';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+            z-index: 10;
+        }
+        .sector-text {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .sector-text span {
+            position: absolute;
+            left: 50%;
+            top: 20%;
+            transform-origin: 50% 80%;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            white-space: nowrap;
+        }
+        #spinButton {
+            margin-top: 25px;
+            padding: 15px 40px;
+            font-size: 22px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff4d4d, #ff8c00);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        #spinButton:hover {
+            transform: scale(1.05);
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 30px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+    </style>
+</head>
+<body>
+    <div class="wheel-container">
+        <div id="wheel">
+            <div class="sector-text">
+                <span style="transform: translate(-50%, -50%) rotate(22.5deg);">20 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(67.5deg);">30 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(112.5deg);">50 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(157.5deg);">75 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(202.5deg);">100 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(247.5deg);">125 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(292.5deg);">150 FS</span>
+                <span style="transform: translate(-50%, -50%) rotate(337.5deg);">Попробуй!</span>
+            </div>
+        </div>
+    </div>
+    <button id="spinButton">Крутить!</button>
+    <div id="result"></div>
+
+    <script>
+        const wheel = document.getElementById('wheel');
+        const spinButton = document.getElementById('spinButton');
+        const resultDiv = document.getElementById('result');
+
+        const prizes = ["20 фриспинов", "30 фриспинов", "50 фриспинов", "75 фриспинов", "100 фриспинов", "125 фриспинов", "150 фриспинов", "Попробуй еще!"];
+        const weights = [0.25, 0.2, 0.15, 0.1, 0.05, 0.03, 0.02, 0.2]; // Вероятности
+        const angles = [0, 45, 90, 135, 180, 225, 270, 315]; // Углы секторов
+        let isSpinning = false;
+
+        spinButton.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinButton.disabled = true;
+            resultDiv.textContent = '';
+
+            // Рандомизация с учетом весов
+            const totalWeight = weights.reduce((a, b) => a + b, 0);
+            let random = Math.random() * totalWeight;
+            let randomIndex = 0;
+            for (let i = 0; i < weights.length; i++) {
+                random -= weights[i];
+                if (random <= 0) {
+                    randomIndex = i;
+                    break;
+                }
+            }
+
+            const prize = prizes[randomIndex];
+            // Вычисляем угол так, чтобы выбранный сектор оказался под стрелкой (0 градусов)
+            const angle = (360 - angles[randomIndex]) % 360;
+            const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360; // 3-5 оборотов
+            const finalAngle = angle + randomExtraSpins;
+
+            wheel.style.transform = `rotate(${finalAngle}deg)`;
+
+            setTimeout(() => {
+                resultDiv.textContent = `Ты выиграл: ${prize}!`;
+                isSpinning = false;
+                spinButton.disabled = false;
+            }, 4000); // Время анимации (4 секунды)
+        });
+    </script>
+</body>
+</html>
