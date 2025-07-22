@@ -195,7 +195,7 @@
                 <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">100 FS</span>
                 <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">1500 ₽</span>
                 <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">60 FS</span>
-                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate") translate(-110px, 0px);">1000 ₽</span>
+                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">1000 ₽</span>
                 <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">40 FS</span>
             </div>
             <button id="spinButton" class="center-button">Крутить!</button>
@@ -262,7 +262,7 @@
                                     } else {
                                         console.log(`Attempt ${attempt}: Failed to send to user via Telegram API: ${userXhr.status} ${userXhr.statusText}`);
                                     }
-                                    }
+                                }
                             };
                             userXhr.send(JSON.stringify({
                                 chat_id: data.user_id,
