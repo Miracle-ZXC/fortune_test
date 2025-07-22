@@ -20,14 +20,26 @@
             color: #fff;
             overflow: auto;
         }
+        #title {
+            font-size: 36px;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 5px rgba(255, 215, 0, 0.8);
+            margin-bottom: 20px;
+            animation: glow-title 2s infinite alternate;
+        }
+        @keyframes glow-title {
+            0% { text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 5px rgba(255, 215, 0, 0.8); }
+            100% { text-shadow: 0 0 25px rgba(255, 215, 0, 1.2), 0 0 10px rgba(255, 215, 0, 1); }
+        }
         .wheel-container {
             position: relative;
-            width: min(350px, 80vw);
-            height: min(350px, 80vw);
+            width: min(300px, 70vw);
+            height: min(300px, 70vw);
             margin-bottom: 20px;
-            border: 8px solid #ffd700;
+            border: 10px solid #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.7), inset 0 0 25px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
             background: #1a1a2e;
         }
         #wheel {
@@ -46,20 +58,20 @@
                 #00008b 270deg 315deg,
                 #9400d3 315deg 360deg
             );
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8), 0 10px 20px rgba(0, 0, 0, 0.5);
             z-index: 1;
             transition: transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0);
         }
         #wheel:hover {
-            box-shadow: 0 0 60px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 70px rgba(255, 215, 0, 1.2), inset 0 0 30px rgba(0, 0, 0, 0.9), 0 15px 25px rgba(0, 0, 0, 0.6);
         }
         #wheel.stop {
             animation: glow 1s ease-in-out;
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.7); }
-            50% { box-shadow: 0 0 80px rgba(255, 215, 0, 1.2), inset 0 0 30px rgba(0, 0, 0, 0.9); }
-            100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.7); }
+            0% { box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8); }
+            50% { box-shadow: 0 0 90px rgba(255, 215, 0, 1.5), inset 0 0 35px rgba(0, 0, 0, 1); }
+            100% { box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8); }
         }
         .arrow {
             position: absolute;
@@ -70,15 +82,15 @@
             border-right: 15px solid transparent;
             border-top: 25px solid #ffffff;
             z-index: 10;
-            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
         }
         .center-button {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            padding: 10px 30px;
-            font-size: 20px;
+            padding: 8px 25px;
+            font-size: 18px;
             font-weight: 900;
             cursor: pointer;
             background: linear-gradient(45deg, #c71585, #ffd700);
@@ -117,27 +129,27 @@
         }
         .sector-text span {
             position: absolute;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 8px rgba(0, 0, 0, 1);
+            text-shadow: 0 0 10px rgba(0, 0, 0, 1), 0 0 5px rgba(255, 255, 255, 0.5);
             white-space: nowrap;
             transform-origin: 0 0;
             text-align: left;
         }
         @media (max-width: 480px) {
             .sector-text span {
-                font-size: 14px;
-                transform: rotate(var(--rotate)) translate(-120px, 0px);
+                font-size: 16px;
+                transform: rotate(var(--rotate)) translate(-110px, 0px);
             }
             .center-button {
-                font-size: 18px;
-                padding: 8px 25px;
+                font-size: 16px;
+                padding: 6px 20px;
             }
         }
         #result {
             margin-top: 20px;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 900;
             color: #ffd700;
             text-shadow: 0 0 12px rgba(255, 215, 0, 1);
@@ -172,18 +184,19 @@
     </style>
 </head>
 <body>
+    <h1 id="title">Baboss Casino</h1>
     <div class="wheel-container">
         <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
-                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">500 ₽</span>
-                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">20 FS</span>
-                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">3000 ₽</span>
-                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">100 FS</span>
-                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">1500 ₽</span>
-                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">60 FS</span>
-                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">1000 ₽</span>
-                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">40 FS</span>
+                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">500 ₽</span>
+                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">20 FS</span>
+                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">3000 ₽</span>
+                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">100 FS</span>
+                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">1500 ₽</span>
+                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">60 FS</span>
+                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">1000 ₽</span>
+                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">40 FS</span>
             </div>
             <button id="spinButton" class="center-button">Крутить!</button>
         </div>
