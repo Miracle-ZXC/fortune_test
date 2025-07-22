@@ -12,14 +12,20 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: radial-gradient(circle, #2a1a3e 0%, #0f1126 100%);
             font-family: 'Montserrat', Arial, sans-serif;
             color: #fff;
+            overflow: hidden;
         }
         .wheel-container {
             position: relative;
-            width: 400px;
-            height: 400px;
+            width: 420px;
+            height: 420px;
+            margin-bottom: 40px;
+            border: 10px solid #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.7), inset 0 0 30px rgba(0, 0, 0, 0.8);
+            background: #1a1a2e;
         }
         #wheel {
             width: 100%;
@@ -28,38 +34,57 @@
             position: relative;
             overflow: hidden;
             background: conic-gradient(
-                #ff3366 0deg 45deg,
-                #4d79ff 45deg 90deg,
-                #33ff99 90deg 135deg,
-                #ffcc33 135deg 180deg,
-                #ff3366 180deg 225deg,
-                #4d79ff 225deg 270deg,
-                #33ff99 270deg 315deg,
-                #ffcc33 315deg 360deg
+                #1c2526 0deg 45deg,    /* 20 FS: чёрный */
+                #c71585 45deg 90deg,   /* 500 ₽: красный */
+                #ff4500 90deg 135deg,  /* 40 FS: оранжевый */
+                #ffd700 135deg 180deg, /* 1000 ₽: жёлтый */
+                #228b22 180deg 225deg, /* 60 FS: зелёный */
+                #00b7eb 225deg 270deg, /* 1500 ₽: голубой */
+                #00008b 270deg 315deg, /* 100 FS: синий */
+                #9400d3 315deg 360deg  /* 3000 ₽: фиолетовый */
             );
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7);
             z-index: 1;
+            transition: transform 8s cubic-bezier(0.22, 0.92, 0.7, 1.0);
+        }
+        #wheel:hover {
+            box-shadow: 0 0 70px rgba(255, 215, 0, 1), inset 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+        #wheel.stop {
+            animation: glow 1s ease-in-out;
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7); }
+            50% { box-shadow: 0 0 100px rgba(255, 215, 0, 1.2), inset 0 0 40px rgba(0, 0, 0, 0.9); }
+            100% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7); }
         }
         .arrow {
             position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%) rotate(180deg);
+            top: 50%;
+            left: -20px;
+            transform: translateY(-50%) rotate(-90deg); /* Наконечник вправо */
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
-            border-top: 30px solid #ffd700;
+            border-top: 30px solid #ffffff; /* Белый цвет */
             z-index: 10;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
         }
         .center-logo {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 36px;
+            font-weight: 900;
             color: #ffd700;
-            text-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 215, 0, 0.9);
             z-index: 5;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.08); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
         .sector-text {
             position: absolute;
@@ -75,45 +100,65 @@
             font-size: 20px;
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 10px rgba(0, 0, 0, 1);
             white-space: nowrap;
             transform-origin: 0 0;
             text-align: left;
         }
         #spinButton {
             margin-top: 25px;
-            padding: 15px 40px;
-            font-size: 22px;
+            padding: 15px 50px;
+            font-size: 24px;
+            font-weight: 900;
             cursor: pointer;
-            background: linear-gradient(45deg, #ff3366, #ff8c00);
+            background: linear-gradient(45deg, #c71585, #ffd700);
             color: white;
             border: none;
-            border-radius: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+            animation: pulseButton 2s infinite;
         }
-        #spinButton:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 99, 71, 0.7);
+        #spinButton:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 1);
+            background: linear-gradient(45deg, #ffd700, #c71585);
         }
         #spinButton:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
+            animation: none;
+        }
+        @keyframes pulseButton {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
         }
         #result {
             margin-top: 20px;
-            font-size: 30px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 900;
             color: #ffd700;
-            text-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+            text-shadow: 0 0 15px rgba(255, 215, 0, 1);
             opacity: 0;
             animation: fadeIn 1s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .color-square {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
         }
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
     </style>
 </head>
 <body>
@@ -121,14 +166,14 @@
         <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
-                <span style="transform: rotate(22.5deg) translate(-180px, 0px);">20 FS</span>
-                <span style="transform: rotate(67.5deg) translate(-180px, 0px);">30 FS</span>
-                <span style="transform: rotate(112.5deg) translate(-180px, 0px);">50 FS</span>
-                <span style="transform: rotate(157.5deg) translate(-180px, 0px);">75 FS</span>
-                <span style="transform: rotate(202.5deg) translate(-180px, 0px);">100 FS</span>
-                <span style="transform: rotate(247.5deg) translate(-180px, 0px);">125 FS</span>
-                <span style="transform: rotate(292.5deg) translate(-180px, 0px);">150 FS</span>
-                <span style="transform: rotate(337.5deg) translate(-180px, 0px);">Попробуй!</span>
+                <span style="transform: rotate(27.5deg) translate(-170px, 0px);">500 ₽</span>
+                <span style="transform: rotate(72.5deg) translate(-170px, 0px);">20 FS</span>
+                <span style="transform: rotate(117.5deg) translate(-170px, 0px);">3000 ₽</span>
+                <span style="transform: rotate(162.5deg) translate(-170px, 0px);">100 FS</span>
+                <span style="transform: rotate(207.5deg) translate(-170px, 0px);">1500 ₽</span>
+                <span style="transform: rotate(252.5deg) translate(-170px, 0px);">60 FS</span>
+                <span style="transform: rotate(297.5deg) translate(-170px, 0px);">1000 ₽</span>
+                <span style="transform: rotate(342.5deg) translate(-170px, 0px);">40 FS</span>
             </div>
             <div class="center-logo">Baboss</div>
         </div>
@@ -141,57 +186,67 @@
         const spinButton = document.getElementById('spinButton');
         const resultDiv = document.getElementById('result');
 
-        const prizes = ["20 фриспинов", "30 фриспинов", "50 фриспинов", "75 фриспинов", "100 фриспинов", "125 фриспинов", "150 фриспинов", "Попробуй еще!"];
-        const weights = [0.25, 0.2, 0.15, 0.1, 0.05, 0.03, 0.02, 0.2];
+        const prizes = ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"];
+        const colors = ["#1c2526", "#c71585", "#ff4500", "#ffd700", "#228b22", "#00b7eb", "#00008b", "#9400d3"];
+        const weights = [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015]; // Verified weights
         const sectorSize = 45;
-        const safeZone = 5;
+        const safeZone = 10; // Исключение границ
         let isSpinning = false;
+        let currentAngle = 0;
 
         spinButton.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
             spinButton.disabled = true;
             resultDiv.textContent = '';
+            resultDiv.innerHTML = '';
 
-            wheel.style.transition = 'none';
-            wheel.style.transform = 'rotate(0deg)';
-            setTimeout(() => {
-                wheel.style.transition = 'transform 5s cubic-bezier(0.2, 0.8, 0.7, 1)';
+            wheel.style.transition = 'transform 8s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
+            wheel.classList.remove('stop');
 
-                const totalWeight = weights.reduce((a, b) => a + b, 0);
-                let random = Math.random() * totalWeight;
-                let randomIndex = 0;
-                for (let i = 0; i < weights.length; i++) {
-                    random -= weights[i];
-                    if (random <= 0) {
-                        randomIndex = i;
-                        break;
-                    }
+            // Выбор сектора с учетом весов
+            const totalWeight = weights.reduce((a, b) => a + b, 0);
+            let random = Math.random() * totalWeight;
+            let randomIndex = 0;
+            for (let i = 0; i < weights.length; i++) {
+                random -= weights[i];
+                if (random <= 0) {
+                    randomIndex = i;
+                    break;
                 }
+            }
 
-                const prize = prizes[randomIndex];
-                const sectorStart = randomIndex * sectorSize;
-                const sectorEnd = sectorStart + sectorSize;
-                const safeStart = sectorStart + safeZone;
-                const safeEnd = sectorEnd - safeZone;
-                const randomAngle = Math.random() * (safeEnd - safeStart) + safeStart;
-                const angle = (360 - randomAngle + 360) % 360;
-                const minSpins = 2 * 360;
-                const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360;
-                const finalAngle = angle + minSpins + randomExtraSpins;
+            // Учет стрелки (наконечник в центре левой части, угол -90°)
+            const sectorStart = (randomIndex * sectorSize); // Начало выбранного сектора
+            const sectorEnd = sectorStart + sectorSize;
+            const safeStart = sectorStart + safeZone;
+            const safeEnd = sectorEnd - safeZone;
+            const randomAngle = Math.random() * (safeEnd - safeStart) + safeStart;
+            const angle = (360 - randomAngle + 90) % 360; // Учет ориентации стрелки
+            const minSpins = 3 * 360;
+            const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360;
+            const finalAngle = currentAngle + angle + minSpins + randomExtraSpins;
 
-                wheel.style.transform = `rotate(${finalAngle}deg)`;
+            wheel.style.transform = `rotate(${finalAngle}deg)`;
+            currentAngle = finalAngle % 360;
 
+            setTimeout(() => {
+                wheel.classList.add('stop');
+
+                // Определяем сектор по финальному углу
+                // Учитываем, что стрелка повернута на -90 градусов
+                const normalizedAngle = (currentAngle + 90) % 360; // Компенсация поворота стрелки
+                const sectorIndex = Math.floor(normalizedAngle / sectorSize) % 8;
+                const prize = prizes[sectorIndex];
+
+                resultDiv.style.opacity = '0';
                 setTimeout(() => {
-                    resultDiv.style.opacity = '0';
-                    setTimeout(() => {
-                        resultDiv.textContent = `Ты выиграл: ${prize}!`;
-                        resultDiv.style.opacity = '1';
-                    }, 100);
-                    isSpinning = false;
-                    spinButton.disabled = false;
-                }, 5000);
-            }, 10);
+                    resultDiv.innerHTML = `Ты выиграл: ${prize}!`;
+                    resultDiv.style.opacity = '1';
+                }, 100);
+                isSpinning = false;
+                spinButton.disabled = false;
+            }, 8000);
         });
     </script>
 </body>
