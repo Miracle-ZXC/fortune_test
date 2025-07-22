@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Колесо фортуны Baboss</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Подключаем Telegram Web App SDK -->
     <style>
         body {
             display: flex;
@@ -62,10 +63,10 @@
             position: absolute;
             top: 50%;
             left: -20px;
-            transform: translateY(-50%) rotate(-90deg); /* Наконечник вправо */
+            transform: translateY(-50%) rotate(-90deg);
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
-            border-top: 30px solid #ffffff; /* Белый цвет */
+            border-top: 30px solid #ffffff;
             z-index: 10;
             filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
         }
@@ -188,9 +189,9 @@
 
         const prizes = ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"];
         const colors = ["#1c2526", "#c71585", "#ff4500", "#ffd700", "#228b22", "#00b7eb", "#00008b", "#9400d3"];
-        const weights = [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015]; // Verified weights
+        const weights = [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015];
         const sectorSize = 45;
-        const safeZone = 10; // Исключение границ
+        const safeZone = 10;
         let isSpinning = false;
         let currentAngle = 0;
 
@@ -204,7 +205,6 @@
             wheel.style.transition = 'transform 8s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
             wheel.classList.remove('stop');
 
-            // Выбор сектора с учетом весов
             const totalWeight = weights.reduce((a, b) => a + b, 0);
             let random = Math.random() * totalWeight;
             let randomIndex = 0;
@@ -216,13 +216,12 @@
                 }
             }
 
-            // Учет стрелки (наконечник в центре левой части, угол -90°)
-            const sectorStart = (randomIndex * sectorSize); // Начало выбранного сектора
+            const sectorStart = (randomIndex * sectorSize);
             const sectorEnd = sectorStart + sectorSize;
             const safeStart = sectorStart + safeZone;
             const safeEnd = sectorEnd - safeZone;
             const randomAngle = Math.random() * (safeEnd - safeStart) + safeStart;
-            const angle = (360 - randomAngle + 90) % 360; // Учет ориентации стрелки
+            const angle = (360 - randomAngle + 90) % 360;
             const minSpins = 3 * 360;
             const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360;
             const finalAngle = currentAngle + angle + minSpins + randomExtraSpins;
@@ -233,9 +232,7 @@
             setTimeout(() => {
                 wheel.classList.add('stop');
 
-                // Определяем сектор по финальному углу
-                // Учитываем, что стрелка повернута на -90 градусов
-                const normalizedAngle = (currentAngle + 90) % 360; // Компенсация поворота стрелки
+                const normalizedAngle = (currentAngle + 90) % 360;
                 const sectorIndex = Math.floor(normalizedAngle / sectorSize) % 8;
                 const prize = prizes[sectorIndex];
 
@@ -243,6 +240,11 @@
                 setTimeout(() => {
                     resultDiv.innerHTML = `Ты выиграл: ${prize}!`;
                     resultDiv.style.opacity = '1';
+                    // Отправляем результат в Telegram
+                    if (window.Telegram?.WebApp) {
+                        Telegram.WebApp.sendData(JSON.stringify({ prize: prize }));
+                        Telegram.WebApp.close(); // Закрываем веб-приложение после отправки
+                    }
                 }, 100);
                 isSpinning = false;
                 spinButton.disabled = false;
