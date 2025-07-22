@@ -205,70 +205,22 @@
         let isSpinning = false;
         let currentAngle = 0;
 
-        // URL parameters
+        // Parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const user_id = urlParams.get('user_id') || 'unknown';
         const ticket_number = urlParams.get('ticket_number') || 'unknown';
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
         const spin_key = urlParams.get('spin_key') || 'unknown';
-        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
+        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8'; // Note: This is insecure; ideally, move to server-side
         const operator_group_id = '-1002519162293';
 
-        // Check spin status
-        async function checkSpinStatus() {
-            try {
-                const xhr = new XMLHttpRequest();
-                const url = `https://api.telegram.org/bot${bot_token}/sendMessage`;
-                const payload = {
-                    chat_id: operator_group_id,
-                    message_thread_id: ticket_topic_id,
-                    text: JSON.stringify({
-                        action: 'check_spin',
-                        user_id: user_id,
-                        ticket_number: ticket_number,
-                        spin_key: spin_key
-                    })
-                };
-                xhr.open('POST', url, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.result && response.result.text) {
-                                const result = JSON.parse(response.result.text);
-                                if (result.valid && !result.used) {
-                                    console.log("Spin is valid and not used");
-                                } else {
-                                    spinButton.disabled = true;
-                                    spinButton.style.display = 'none';
-                                    resultDiv.innerHTML = result.used ? '❌ Это колесо уже было использовано!' : '❌ Неверная ссылка на колесо!';
-                                    closeButton.style.display = 'block';
-                                }
-                            } else {
-                                console.log("Invalid response from server");
-                                spinButton.disabled = true;
-                                spinButton.style.display = 'none';
-                                resultDiv.innerHTML = '❌ Ошибка проверки вращения!';
-                                closeButton.style.display = 'block';
-                            }
-                        } else {
-                            console.log("Failed to check spin status:", xhr.status, xhr.statusText);
-                            spinButton.disabled = true;
-                            spinButton.style.display = 'none';
-                            resultDiv.innerHTML = '❌ Ошибка проверки вращения!';
-                            closeButton.style.display = 'block';
-                        }
-                    }
-                };
-                xhr.send(JSON.stringify(payload));
-            } catch (e) {
-                console.log("Error checking spin status:", e);
-                spinButton.disabled = true;
-                spinButton.style.display = 'none';
-                resultDiv.innerHTML = '❌ Ошибка проверки вращения!';
-                closeButton.style.display = 'block';
-            }
+        // Check if this spin_key has already been used locally (to prevent reload spins)
+        const spunKey = 'spun_' + spin_key;
+        if (localStorage.getItem(spunKey)) {
+            spinButton.disabled = true;
+            spinButton.style.display = 'none';
+            resultDiv.innerHTML = '❌ Это колесо уже было использовано!';
+            closeButton.style.display = 'block';
         }
 
         // Send data via Telegram API
@@ -367,6 +319,8 @@
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
+                // Mark as spun in localStorage to prevent reload spins
+                localStorage.setItem(spunKey, 'true');
             } else {
                 console.log("All attempts to send data failed");
             }
@@ -375,7 +329,6 @@
 
         // Check Telegram Web App initialization
         window.addEventListener('load', () => {
-            checkSpinStatus();
             if (window.Telegram?.WebApp) {
                 console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
                 window.Telegram.WebApp.ready();
