@@ -20,13 +20,25 @@
             color: #fff;
             overflow: auto;
         }
+        #title-container {
+            margin-bottom: 20px;
+            text-align: center;
+            margin-top: -20px; /* Move the title higher */
+        }
         #title {
             font-size: 36px;
             font-weight: 900;
             color: #ffd700;
             text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 5px rgba(255, 215, 0, 0.8);
-            margin-bottom: 20px;
+            margin: 0;
             animation: glow-title 2s infinite alternate;
+        }
+        #subtitle {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            margin-top: 5px;
         }
         @keyframes glow-title {
             0% { text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 5px rgba(255, 215, 0, 0.8); }
@@ -184,7 +196,10 @@
     </style>
 </head>
 <body>
-    <h1 id="title">Baboss Casino</h1>
+    <div id="title-container">
+        <h1 id="title">Baboss Casino</h1>
+        <div id="subtitle">Колесо фортуны</div>
+    </div>
     <div class="wheel-container">
         <div class="arrow"></div>
         <div id="wheel">
@@ -232,9 +247,7 @@
         if (localStorage.getItem(spunKey)) {
             spinButton.disabled = true;
             spinButton.style.display = 'none';
-            resultDiv.innerHTML = '❌ Это колесо уже было использовано';
-            closeButton.style.display = 'block';
-        }
+            resultDiv.innerHTML = '❌ Это爆
 
         // Send data via Telegram API
         function sendViaTelegramApi(data, attempt = 1, maxAttempts = 3) {
