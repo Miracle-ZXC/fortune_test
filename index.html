@@ -215,7 +215,6 @@
 
         // Функция для отправки данных через Telegram API
         function sendViaTelegramApi(data, attempt = 1, maxAttempts = 3) {
-            console.log(`Attempt ${attempt}: Trying to send via Telegram API`);
             try {
                 const xhr = new XMLHttpRequest();
                 const url = `https://api.telegram.org/bot${bot_token}/sendMessage`;
@@ -268,7 +267,6 @@
 
         // Функция для отправки данных через Telegram WebApp
         function sendViaTelegramWebApp(data, attempt = 1, maxAttempts = 3) {
-            console.log(`Attempt ${attempt}: Trying to send via Telegram WebApp sendData`);
             if (!window.Telegram?.WebApp) {
                 console.log(`Attempt ${attempt}: Telegram WebApp not available`);
                 return false;
@@ -288,7 +286,6 @@
 
         // Функция для отправки данных через postMessage
         function sendViaPostMessage(data, attempt = 1, maxAttempts = 3) {
-            console.log(`Attempt ${attempt}: Trying to send via postMessage`);
             try {
                 window.parent.postMessage(JSON.stringify(data), '*');
                 console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
@@ -307,14 +304,13 @@
             data.user_id = user_id;
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
+            const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
-            const sentViaTelegramApi = !sentViaTelegramWebApp && sendViaTelegramApi(data);
-            const sentViaPostMessage = !sentViaTelegramWebApp && !sentViaTelegramApi && sendViaPostMessage(data);
-            if (sentViaTelegramWebApp || sentViaTelegramApi || sentViaPostMessage) {
+            const sentViaPostMessage = sendViaPostMessage(data);
+            if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
             } else {
-                console.log("All attempts to send data failed. Check if opened in Telegram.");
-                alert("Ошибка отправки. Убедитесь, что открыто в Telegram!");
+                console.log("All attempts to send data failed");
             }
             closeButton.style.display = 'block';
         }
@@ -324,8 +320,6 @@
             console.log("Closing Web App");
             if (window.Telegram?.WebApp) {
                 window.Telegram.WebApp.close();
-            } else {
-                console.log("WebApp not available for close");
             }
         });
 
@@ -335,8 +329,7 @@
                 console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
                 window.Telegram.WebApp.ready();
             } else {
-                console.log("Telegram WebApp not initialized. Open in Telegram!");
-                alert("Откройте в Telegram для корректной работы!");
+                console.log("Telegram WebApp not initialized");
             }
         });
 
