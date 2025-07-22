@@ -247,7 +247,9 @@
         if (localStorage.getItem(spunKey)) {
             spinButton.disabled = true;
             spinButton.style.display = 'none';
-            resultDiv.innerHTML = '❌ Это爆
+            resultDiv.innerHTML = '❌ Это колесо уже было использовано';
+            closeButton.style.display = 'block';
+        }
 
         // Send data via Telegram API
         function sendViaTelegramApi(data, attempt = 1, maxAttempts = 3) {
@@ -345,22 +347,22 @@
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
-                // Mark as spun in localStorage to prevent reload spins
+                // Mark as spun in localStorage to prevent Reload spins
                 localStorage.setItem(spunKey, 'true');
+                closeButton.style.display = 'block';
             } else {
                 console.log("All attempts to send data failed");
             }
-            closeButton.style.display = 'block';
         }
 
         // Check Telegram Web App initialization
         window.addEventListener('load', () => {
-            if (window.Telegram?.WebApp) {
-                console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
-                window.Telegram.WebApp.ready();
-            } else {
-                console.log("Telegram WebApp not initialized");
-            }
+          if (window.Telegram?.WebApp) {
+            console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
+            window.Telegram.WebApp.ready();
+          } else {
+            console.log("Telegram WebApp not initialized");
+          }
         });
 
         // Spin button click handler
