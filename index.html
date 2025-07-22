@@ -154,6 +154,23 @@
             border: 2px solid #fff;
             box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
         }
+        #closeButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff4500, #c71585);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #closeButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 1);
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
@@ -179,11 +196,13 @@
         </div>
     </div>
     <div id="result"></div>
+    <button id="closeButton" style="display: none;">Закрыть</button>
 
     <script>
         const wheel = document.getElementById('wheel');
         const spinButton = document.getElementById('spinButton');
         const resultDiv = document.getElementById('result');
+        const closeButton = document.getElementById('closeButton');
 
         const prizes = ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"];
         const colors = ["#1c2526", "#c71585", "#ff4500", "#ffd700", "#228b22", "#00b7eb", "#00008b", "#9400d3"];
@@ -193,49 +212,86 @@
         let isSpinning = false;
         let currentAngle = 0;
 
-        // Функция для отправки данных с несколькими попытками
-        function sendWebAppData(data, attempt = 1, maxAttempts = 3) {
+        // Функция для отправки данных через Telegram WebApp
+        function sendViaTelegramWebApp(data, attempt = 1, maxAttempts = 3) {
             if (!window.Telegram?.WebApp) {
-                console.error('Telegram WebApp not available');
-                return;
+                console.error(`Attempt ${attempt}: Telegram WebApp not available`);
+                return false;
             }
-            
             try {
-                // Основной метод отправки
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
-                
-                // Закрываем Web App после успешной отправки
-                setTimeout(() => {
-                    window.Telegram.WebApp.close();
-                }, 500);
+                return true;
             } catch (e) {
                 console.error(`Attempt ${attempt}: Failed to send data via sendData: ${e}`);
                 if (attempt < maxAttempts) {
-                    // Пробуем снова через 1 секунду
-                    setTimeout(() => {
-                        sendWebAppData(data, attempt + 1, maxAttempts);
-                    }, 1000);
-                } else {
-                    // Запасной метод: отправка через postMessage
-                    try {
-                        window.parent.postMessage(JSON.stringify(data), '*');
-                        console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
-                        setTimeout(() => {
-                            window.Telegram.WebApp.close();
-                        }, 500);
-                    } catch (postError) {
-                        console.error(`Failed to send data via postMessage: ${postError}`);
-                    }
+                    setTimeout(() => sendViaTelegramWebApp(data, attempt + 1, maxAttempts), 1000);
                 }
+                return false;
             }
         }
+
+        // Функция для отправки данных через postMessage
+        function sendViaPostMessage(data) {
+            try {
+                window.parent.postMessage(JSON.stringify(data), '*');
+                console.log(`Data sent via postMessage: ${JSON.stringify(data)}`);
+                return true;
+            } catch (e) {
+                console.error(`Failed to send data via postMessage: ${e}`);
+                return false;
+            }
+        }
+
+        // Функция для отправки данных через AJAX (тестовый эндпоинт)
+        function sendViaAjax(data) {
+            try {
+                const xhr = new XMLHttpRequest();
+                // Используйте ваш тестовый эндпоинт, например, от webhook.site
+                const webhookUrl = 'https://webhook.site/your-unique-webhook-id'; // Замените на ваш URL
+                xhr.open('POST', webhookUrl, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            console.log(`Data sent via AJAX: ${JSON.stringify(data)}`);
+                        } else {
+                            console.error(`Failed to send data via AJAX: ${xhr.status} ${xhr.statusText}`);
+                        }
+                    }
+                };
+                xhr.send(JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.error(`Failed to send data via AJAX: ${e}`);
+                return false;
+            }
+        }
+
+        // Основная функция отправки данных
+        function sendWebAppData(data) {
+            const sentViaTelegram = sendViaTelegramWebApp(data);
+            if (!sentViaTelegram) {
+                sendViaPostMessage(data);
+            }
+            // Отправка через AJAX (для тестирования, требует настройки сервера)
+            sendViaAjax(data);
+            // Показываем кнопку закрытия вместо автоматического закрытия
+            closeButton.style.display = 'block';
+        }
+
+        // Обработчик кнопки закрытия
+        closeButton.addEventListener('click', () => {
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.close();
+            }
+        });
 
         spinButton.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
             spinButton.disabled = true;
-            spinButton.style.display = 'none'; // Hide the button after click
+            spinButton.style.display = 'none';
             resultDiv.textContent = '';
             resultDiv.innerHTML = '';
 
