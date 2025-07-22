@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Колесо фортуны Baboss</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js?version=7.2"></script>
     <style>
         body {
             display: flex;
@@ -147,12 +147,13 @@
             align-items: center;
             gap: 10px;
         }
-        .color-square {
-            width: 24px;
-            height: 24px;
-            border-radius: 5px;
-            border: 2px solid #fff;
-            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+        #debug {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #fff;
+            text-align: center;
+            max-width: 90%;
+            word-wrap: break-word;
         }
         #closeButton {
             margin-top: 20px;
@@ -196,12 +197,14 @@
         </div>
     </div>
     <div id="result"></div>
+    <div id="debug"></div>
     <button id="closeButton" style="display: none;">Закрыть</button>
 
     <script>
         const wheel = document.getElementById('wheel');
         const spinButton = document.getElementById('spinButton');
         const resultDiv = document.getElementById('result');
+        const debugDiv = document.getElementById('debug');
         const closeButton = document.getElementById('closeButton');
 
         const prizes = ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"];
@@ -212,78 +215,75 @@
         let isSpinning = false;
         let currentAngle = 0;
 
+        // Функция для отображения отладочной информации
+        function logDebug(message) {
+            console.log(message);
+            debugDiv.innerHTML += `${message}<br>`;
+        }
+
         // Функция для отправки данных через Telegram WebApp
-        function sendViaTelegramWebApp(data, attempt = 1, maxAttempts = 3) {
+        function sendViaTelegramWebApp(data, attempt = 1, maxAttempts = 5) {
             if (!window.Telegram?.WebApp) {
-                console.error(`Attempt ${attempt}: Telegram WebApp not available`);
+                logDebug(`Attempt ${attempt}: Telegram WebApp not available`);
                 return false;
             }
             try {
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
-                console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
+                logDebug(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
                 return true;
             } catch (e) {
-                console.error(`Attempt ${attempt}: Failed to send data via sendData: ${e}`);
+                logDebug(`Attempt ${attempt}: Failed to send data via sendData: ${e}`);
                 if (attempt < maxAttempts) {
-                    setTimeout(() => sendViaTelegramWebApp(data, attempt + 1, maxAttempts), 1000);
+                    setTimeout(() => sendViaTelegramWebApp(data, attempt + 1, maxAttempts), 2000);
                 }
                 return false;
             }
         }
 
         // Функция для отправки данных через postMessage
-        function sendViaPostMessage(data) {
+        function sendViaPostMessage(data, attempt = 1, maxAttempts = 5) {
             try {
                 window.parent.postMessage(JSON.stringify(data), '*');
-                console.log(`Data sent via postMessage: ${JSON.stringify(data)}`);
+                logDebug(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
                 return true;
             } catch (e) {
-                console.error(`Failed to send data via postMessage: ${e}`);
-                return false;
-            }
-        }
-
-        // Функция для отправки данных через AJAX (тестовый эндпоинт)
-        function sendViaAjax(data) {
-            try {
-                const xhr = new XMLHttpRequest();
-                // Используйте ваш тестовый эндпоинт, например, от webhook.site
-                const webhookUrl = 'https://webhook.site/your-unique-webhook-id'; // Замените на ваш URL
-                xhr.open('POST', webhookUrl, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            console.log(`Data sent via AJAX: ${JSON.stringify(data)}`);
-                        } else {
-                            console.error(`Failed to send data via AJAX: ${xhr.status} ${xhr.statusText}`);
-                        }
-                    }
-                };
-                xhr.send(JSON.stringify(data));
-                return true;
-            } catch (e) {
-                console.error(`Failed to send data via AJAX: ${e}`);
+                logDebug(`Attempt ${attempt}: Failed to send data via postMessage: ${e}`);
+                if (attempt < maxAttempts) {
+                    setTimeout(() => sendViaPostMessage(data, attempt + 1, maxAttempts), 2000);
+                }
                 return false;
             }
         }
 
         // Основная функция отправки данных
         function sendWebAppData(data) {
+            logDebug(`Starting data send for: ${JSON.stringify(data)}`);
             const sentViaTelegram = sendViaTelegramWebApp(data);
-            if (!sentViaTelegram) {
-                sendViaPostMessage(data);
+            const sentViaPostMessage = sendViaPostMessage(data);
+            if (sentViaTelegram || sentViaPostMessage) {
+                logDebug("Data sent successfully via at least one method");
+            } else {
+                logDebug("All attempts to send data failed");
             }
-            // Отправка через AJAX (для тестирования, требует настройки сервера)
-            sendViaAjax(data);
-            // Показываем кнопку закрытия вместо автоматического закрытия
+            // Показываем кнопку закрытия
             closeButton.style.display = 'block';
         }
 
         // Обработчик кнопки закрытия
         closeButton.addEventListener('click', () => {
+            logDebug("Closing Web App");
             if (window.Telegram?.WebApp) {
                 window.Telegram.WebApp.close();
+            }
+        });
+
+        // Проверка инициализации Telegram Web App
+        window.addEventListener('load', () => {
+            if (window.Telegram?.WebApp) {
+                logDebug(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
+                window.Telegram.WebApp.ready();
+            } else {
+                logDebug("Telegram WebApp not initialized");
             }
         });
 
@@ -294,6 +294,7 @@
             spinButton.style.display = 'none';
             resultDiv.textContent = '';
             resultDiv.innerHTML = '';
+            debugDiv.innerHTML = '';
 
             wheel.style.transition = 'transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
             wheel.classList.remove('stop');
