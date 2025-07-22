@@ -193,6 +193,44 @@
         let isSpinning = false;
         let currentAngle = 0;
 
+        // Функция для отправки данных с несколькими попытками
+        function sendWebAppData(data, attempt = 1, maxAttempts = 3) {
+            if (!window.Telegram?.WebApp) {
+                console.error('Telegram WebApp not available');
+                return;
+            }
+            
+            try {
+                // Основной метод отправки
+                window.Telegram.WebApp.sendData(JSON.stringify(data));
+                console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
+                
+                // Закрываем Web App после успешной отправки
+                setTimeout(() => {
+                    window.Telegram.WebApp.close();
+                }, 500);
+            } catch (e) {
+                console.error(`Attempt ${attempt}: Failed to send data via sendData: ${e}`);
+                if (attempt < maxAttempts) {
+                    // Пробуем снова через 1 секунду
+                    setTimeout(() => {
+                        sendWebAppData(data, attempt + 1, maxAttempts);
+                    }, 1000);
+                } else {
+                    // Запасной метод: отправка через postMessage
+                    try {
+                        window.parent.postMessage(JSON.stringify(data), '*');
+                        console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
+                        setTimeout(() => {
+                            window.Telegram.WebApp.close();
+                        }, 500);
+                    } catch (postError) {
+                        console.error(`Failed to send data via postMessage: ${postError}`);
+                    }
+                }
+            }
+        }
+
         spinButton.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
@@ -239,13 +277,9 @@
                 setTimeout(() => {
                     resultDiv.innerHTML = `Ты выиграл: ${prize}!`;
                     resultDiv.style.opacity = '1';
-                    if (window.Telegram?.WebApp) {
-                        Telegram.WebApp.sendData(JSON.stringify({ prize: prize }));
-                        Telegram.WebApp.close();
-                    }
+                    sendWebAppData({ prize: prize });
                 }, 100);
                 isSpinning = false;
-                // Button remains hidden, so no need to re-enable it
             }, 5000);
         });
     </script>
