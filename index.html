@@ -37,9 +37,9 @@
             width: min(300px, 70vw);
             height: min(300px, 70vw);
             margin-bottom: 20px;
-            border: 10px solid #ffd700;
+            border: 6px solid #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), inset 0 0 20px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.3);
             background: #1a1a2e;
         }
         #wheel {
@@ -49,40 +49,40 @@
             position: relative;
             overflow: hidden;
             background: conic-gradient(
-                #1c2526 0deg 45deg,
-                #c71585 45deg 90deg,
-                #ff4500 90deg 135deg,
-                #ffd700 135deg 180deg,
-                #228b22 180deg 225deg,
-                #00b7eb 225deg 270deg,
-                #00008b 270deg 315deg,
-                #9400d3 315deg 360deg
+                #2e3a3e 0deg 45deg,
+                #d81b7a 45deg 90deg,
+                #ff6f20 90deg 135deg,
+                #ffeb3b 135deg 180deg,
+                #4caf50 180deg 225deg,
+                #26c6da 225deg 270deg,
+                #3f51b5 270deg 315deg,
+                #ab47bc 315deg 360deg
             );
-            box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8), 0 10px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.8), 0 10px 20px rgba(0, 0, 0, 0.5);
             z-index: 1;
             transition: transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0);
         }
         #wheel:hover {
-            box-shadow: 0 0 70px rgba(255, 215, 0, 1.2), inset 0 0 30px rgba(0, 0, 0, 0.9), 0 15px 25px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.9), 0 15px 25px rgba(0, 0, 0, 0.6);
         }
         #wheel.stop {
             animation: glow 1s ease-in-out;
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8); }
-            50% { box-shadow: 0 0 90px rgba(255, 215, 0, 1.5), inset 0 0 35px rgba(0, 0, 0, 1); }
-            100% { box-shadow: 0 0 50px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8); }
+            0% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.8); }
+            50% { box-shadow: 0 0 70px rgba(255, 215, 0, 1.2), inset 0 0 30px rgba(0, 0, 0, 1); }
+            100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.8); }
         }
         .arrow {
             position: absolute;
             top: 50%;
-            left: -15px;
+            left: -20px;
             transform: translateY(-50%) rotate(-90deg);
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid #ffffff;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 20px solid #ffffff;
             z-index: 10;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
         }
         .center-button {
             position: absolute;
@@ -93,7 +93,7 @@
             font-size: 18px;
             font-weight: 900;
             cursor: pointer;
-            background: linear-gradient(45deg, #c71585, #ffd700);
+            background: linear-gradient(45deg, #d81b7a, #ffeb3b);
             color: white;
             border: none;
             border-radius: 25px;
@@ -105,7 +105,7 @@
         .center-button:hover:not(:disabled) {
             transform: translate(-50%, -50%) scale(1.1);
             box-shadow: 0 0 20px rgba(255, 215, 0, 1);
-            background: linear-gradient(45deg, #ffd700, #c71585);
+            background: linear-gradient(45deg, #ffeb3b, #d81b7a);
         }
         .center-button:disabled {
             opacity: 0.5;
@@ -140,7 +140,7 @@
         @media (max-width: 480px) {
             .sector-text span {
                 font-size: 16px;
-                transform: rotate(var(--rotate)) translate(-110px, 0px);
+                transform: rotate(var(--rotate)) translate(-90px, 0px);
             }
             .center-button {
                 font-size: 16px;
@@ -165,7 +165,7 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            background: linear-gradient(45deg, #ff4500, #c71585);
+            background: linear-gradient(45deg, #ff6f20, #d81b7a);
             color: white;
             border: none;
             border-radius: 20px;
@@ -189,14 +189,14 @@
         <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
-                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">500 ₽</span>
-                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">20 FS</span>
-                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">3000 ₽</span>
-                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">100 FS</span>
-                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">1500 ₽</span>
-                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">60 FS</span>
-                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">1000 ₽</span>
-                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-130px, 0px);">40 FS</span>
+                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">500 ₽</span>
+                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">20 FS</span>
+                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">3000 ₽</span>
+                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">100 FS</span>
+                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">1500 ₽</span>
+                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">60 FS</span>
+                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">1000 ₽</span>
+                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">40 FS</span>
             </div>
             <button id="spinButton" class="center-button">Крутить!</button>
         </div>
@@ -211,7 +211,7 @@
         const closeButton = document.getElementById('closeButton');
 
         const prizes = ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"];
-        const colors = ["#1c2526", "#c71585", "#ff4500", "#ffd700", "#228b22", "#00b7eb", "#00008b", "#9400d3"];
+        const colors = ["#2e3a3e", "#d81b7a", "#ff6f20", "#ffeb3b", "#4caf50", "#26c6da", "#3f51b5", "#ab47bc"];
         const weights = [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015];
         const sectorSize = 45;
         const safeZone = 10;
@@ -232,7 +232,7 @@
         if (localStorage.getItem(spunKey)) {
             spinButton.disabled = true;
             spinButton.style.display = 'none';
-            resultDiv.innerHTML = '❌ Это колесо уже было использовано!';
+            resultDiv.innerHTML = '❌ Это колесо уже было использовано';
             closeButton.style.display = 'block';
         }
 
@@ -324,7 +324,7 @@
         // Send web app data with spin_key
         function sendWebAppData(data) {
             data.user_id = user_id;
-            data.ticket_number = ticket_number;
+            data Ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
             data.spin_key = spin_key;
             const sentViaTelegramApi = sendViaTelegramApi(data);
@@ -395,7 +395,7 @@
 
                 resultDiv.style.opacity = '0';
                 setTimeout(() => {
-                    resultDiv.innerHTML = `Ты выиграл: ${prize}!`;
+                    resultDiv.innerHTML = `Ты выиграл: ${prize}`;
                     resultDiv.style.opacity = '1';
                     sendWebAppData({ prize: prize });
                 }, 100);
