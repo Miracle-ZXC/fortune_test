@@ -308,10 +308,9 @@
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
-            // Временно закомментировал fallback, чтобы заставить использовать WebApp. Раскомментируйте если нужно, но с условием !sentViaTelegramWebApp
-            // const sentViaTelegramApi = /* !sentViaTelegramWebApp && */ sendViaTelegramApi(data);
-            // const sentViaPostMessage = /* !sentViaTelegramWebApp && !sentViaTelegramApi && */ sendViaPostMessage(data);
-            if (sentViaTelegramWebApp /* || sentViaTelegramApi || sentViaPostMessage */) {
+            const sentViaTelegramApi = !sentViaTelegramWebApp && sendViaTelegramApi(data);
+            const sentViaPostMessage = !sentViaTelegramWebApp && !sentViaTelegramApi && sendViaPostMessage(data);
+            if (sentViaTelegramWebApp || sentViaTelegramApi || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
             } else {
                 console.log("All attempts to send data failed. Check if opened in Telegram.");
