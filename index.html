@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Колесо фортуны Baboss</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Подключаем Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             display: flex;
@@ -22,12 +22,12 @@
         }
         .wheel-container {
             position: relative;
-            width: min(420px, 90vw);
-            height: min(420px, 90vw);
-            margin-bottom: 40px;
-            border: 10px solid #ffd700;
+            width: min(350px, 80vw);
+            height: min(350px, 80vw);
+            margin-bottom: 20px;
+            border: 8px solid #ffd700;
             border-radius: 50%;
-            box-shadow: 0 0 60px rgba(255, 215, 0, 0.7), inset 0 0 30px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.7), inset 0 0 25px rgba(0, 0, 0, 0.8);
             background: #1a1a2e;
         }
         #wheel {
@@ -37,52 +37,69 @@
             position: relative;
             overflow: hidden;
             background: conic-gradient(
-                #1c2526 0deg 45deg,    /* 20 FS: чёрный */
-                #c71585 45deg 90deg,   /* 500 ₽: красный */
-                #ff4500 90deg 135deg,  /* 40 FS: оранжевый */
-                #ffd700 135deg 180deg, /* 1000 ₽: жёлтый */
-                #228b22 180deg 225deg, /* 60 FS: зелёный */
-                #00b7eb 225deg 270deg, /* 1500 ₽: голубой */
-                #00008b 270deg 315deg, /* 100 FS: синий */
-                #9400d3 315deg 360deg  /* 3000 ₽: фиолетовый */
+                #1c2526 0deg 45deg,
+                #c71585 45deg 90deg,
+                #ff4500 90deg 135deg,
+                #ffd700 135deg 180deg,
+                #228b22 180deg 225deg,
+                #00b7eb 225deg 270deg,
+                #00008b 270deg 315deg,
+                #9400d3 315deg 360deg
             );
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.7);
             z-index: 1;
-            transition: transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0); /* Уменьшена длительность для оптимизации */
+            transition: transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0);
         }
         #wheel:hover {
-            box-shadow: 0 0 70px rgba(255, 215, 0, 1), inset 0 0 30px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 0 60px rgba(255, 215, 0, 1), inset 0 0 25px rgba(0, 0, 0, 0.8);
         }
         #wheel.stop {
             animation: glow 1s ease-in-out;
         }
         @keyframes glow {
-            0% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7); }
-            50% { box-shadow: 0 0 100px rgba(255, 215, 0, 1.2), inset 0 0 40px rgba(0, 0, 0, 0.9); }
-            100% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7); }
+            0% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.7); }
+            50% { box-shadow: 0 0 80px rgba(255, 215, 0, 1.2), inset 0 0 30px rgba(0, 0, 0, 0.9); }
+            100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.7); }
         }
         .arrow {
             position: absolute;
             top: 50%;
-            left: -20px;
+            left: -15px;
             transform: translateY(-50%) rotate(-90deg);
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 30px solid #ffffff;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #ffffff;
             z-index: 10;
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
         }
-        .center-logo {
+        .center-button {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 36px;
+            padding: 10px 30px;
+            font-size: 20px;
             font-weight: 900;
-            color: #ffd700;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 215, 0, 0.9);
-            z-index: 5;
+            cursor: pointer;
+            background: linear-gradient(45deg, #c71585, #ffd700);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
             animation: pulse 2s infinite;
+            z-index: 5;
+        }
+        .center-button:hover:not(:disabled) {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 1);
+            background: linear-gradient(45deg, #ffd700, #c71585);
+        }
+        .center-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translate(-50%, -50%);
+            animation: none;
         }
         @keyframes pulse {
             0% { transform: translate(-50%, -50%) scale(1); }
@@ -100,72 +117,45 @@
         }
         .sector-text span {
             position: absolute;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 10px rgba(0, 0, 0, 1);
+            text-shadow: 0 0 8px rgba(0, 0, 0, 1);
             white-space: nowrap;
             transform-origin: 0 0;
             text-align: left;
         }
         @media (max-width: 480px) {
             .sector-text span {
-                font-size: 16px;
-                transform: rotate(var(--rotate)) translate(-130px, 0px);
+                font-size: 14px;
+                transform: rotate(var(--rotate)) translate(-120px, 0px);
             }
-        }
-        #spinButton {
-            margin-top: 25px;
-            padding: 15px 50px;
-            font-size: 24px;
-            font-weight: 900;
-            cursor: pointer;
-            background: linear-gradient(45deg, #c71585, #ffd700);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
-            transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
-            animation: pulseButton 2s infinite;
-            width: min(100%, 300px);
-        }
-        #spinButton:hover:not(:disabled) {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(255, 215, 0, 1);
-            background: linear-gradient(45deg, #ffd700, #c71585);
-        }
-        #spinButton:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            animation: none;
-        }
-        @keyframes pulseButton {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
+            .center-button {
+                font-size: 18px;
+                padding: 8px 25px;
+            }
         }
         #result {
             margin-top: 20px;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 900;
             color: #ffd700;
-            text-shadow: 0 0 15px rgba(255, 215, 0, 1);
+            text-shadow: 0 0 12px rgba(255, 215, 0, 1);
             opacity: 0;
             animation: fadeIn 1s forwards;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .color-square {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
             border: 2px solid #fff;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+            box-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
@@ -176,19 +166,18 @@
         <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
-                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">500 ₽</span>
-                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">20 FS</span>
-                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">3000 ₽</span>
-                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">100 FS</span>
-                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">1500 ₽</span>
-                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">60 FS</span>
-                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">1000 ₽</span>
-                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">40 FS</span>
+                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">500 ₽</span>
+                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">20 FS</span>
+                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">3000 ₽</span>
+                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">100 FS</span>
+                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">1500 ₽</span>
+                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">60 FS</span>
+                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">1000 ₽</span>
+                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-140px, 0px);">40 FS</span>
             </div>
-            <div class="center-logo">Baboss</div>
+            <button id="spinButton" class="center-button">Крутить!</button>
         </div>
     </div>
-    <button id="spinButton">Крутить!</button>
     <div id="result"></div>
 
     <script>
@@ -208,6 +197,7 @@
             if (isSpinning) return;
             isSpinning = true;
             spinButton.disabled = true;
+            spinButton.style.display = 'none'; // Hide the button after click
             resultDiv.textContent = '';
             resultDiv.innerHTML = '';
 
@@ -249,15 +239,14 @@
                 setTimeout(() => {
                     resultDiv.innerHTML = `Ты выиграл: ${prize}!`;
                     resultDiv.style.opacity = '1';
-                    // Отправляем результат в Telegram
                     if (window.Telegram?.WebApp) {
                         Telegram.WebApp.sendData(JSON.stringify({ prize: prize }));
-                        Telegram.WebApp.close(); // Закрываем веб-приложение после отправки
+                        Telegram.WebApp.close();
                     }
                 }, 100);
                 isSpinning = false;
-                spinButton.disabled = false;
-            }, 5000); // Соответствует длительности transition
+                // Button remains hidden, so no need to re-enable it
+            }, 5000);
         });
     </script>
 </body>
