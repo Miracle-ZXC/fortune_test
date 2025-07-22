@@ -20,25 +20,13 @@
             color: #fff;
             overflow: auto;
         }
-        #title-container {
-            margin-bottom: 20px;
-            text-align: center;
-            margin-top: -20px; /* Move the title higher */
-        }
         #title {
             font-size: 36px;
             font-weight: 900;
             color: #ffd700;
             text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 5px rgba(255, 215, 0, 0.8);
-            margin: 0;
+            margin-bottom: 20px;
             animation: glow-title 2s infinite alternate;
-        }
-        #subtitle {
-            font-size: 24px;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
-            margin-top: 5px;
         }
         @keyframes glow-title {
             0% { text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 5px rgba(255, 215, 0, 0.8); }
@@ -196,10 +184,7 @@
     </style>
 </head>
 <body>
-    <div id="title-container">
-        <h1 id="title">Baboss Casino</h1>
-        <div id="subtitle">Колесо фортуны</div>
-    </div>
+    <h1 id="title">Baboss Casino</h1>
     <div class="wheel-container">
         <div class="arrow"></div>
         <div id="wheel">
@@ -347,22 +332,22 @@
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
-                // Mark as spun in localStorage to prevent Reload spins
+                // Mark as spun in localStorage to prevent reload spins
                 localStorage.setItem(spunKey, 'true');
-                closeButton.style.display = 'block';
             } else {
                 console.log("All attempts to send data failed");
             }
+            closeButton.style.display = 'block';
         }
 
         // Check Telegram Web App initialization
         window.addEventListener('load', () => {
-          if (window.Telegram?.WebApp) {
-            console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
-            window.Telegram.WebApp.ready();
-          } else {
-            console.log("Telegram WebApp not initialized");
-          }
+            if (window.Telegram?.WebApp) {
+                console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
+                window.Telegram.WebApp.ready();
+            } else {
+                console.log("Telegram WebApp not initialized");
+            }
         });
 
         // Spin button click handler
