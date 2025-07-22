@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Колесо фортуны Baboss</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Подключаем Telegram Web App SDK -->
     <style>
@@ -11,17 +11,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
             background: radial-gradient(circle, #2a1a3e 0%, #0f1126 100%);
             font-family: 'Montserrat', Arial, sans-serif;
             color: #fff;
-            overflow: hidden;
+            overflow: auto;
         }
         .wheel-container {
             position: relative;
-            width: 420px;
-            height: 420px;
+            width: min(420px, 90vw);
+            height: min(420px, 90vw);
             margin-bottom: 40px;
             border: 10px solid #ffd700;
             border-radius: 50%;
@@ -46,7 +48,7 @@
             );
             box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), inset 0 0 25px rgba(0, 0, 0, 0.7);
             z-index: 1;
-            transition: transform 8s cubic-bezier(0.22, 0.92, 0.7, 1.0);
+            transition: transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0); /* Уменьшена длительность для оптимизации */
         }
         #wheel:hover {
             box-shadow: 0 0 70px rgba(255, 215, 0, 1), inset 0 0 30px rgba(0, 0, 0, 0.8);
@@ -106,6 +108,12 @@
             transform-origin: 0 0;
             text-align: left;
         }
+        @media (max-width: 480px) {
+            .sector-text span {
+                font-size: 16px;
+                transform: rotate(var(--rotate)) translate(-130px, 0px);
+            }
+        }
         #spinButton {
             margin-top: 25px;
             padding: 15px 50px;
@@ -119,6 +127,7 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
             transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
             animation: pulseButton 2s infinite;
+            width: min(100%, 300px);
         }
         #spinButton:hover:not(:disabled) {
             transform: scale(1.1);
@@ -167,14 +176,14 @@
         <div class="arrow"></div>
         <div id="wheel">
             <div class="sector-text">
-                <span style="transform: rotate(27.5deg) translate(-170px, 0px);">500 ₽</span>
-                <span style="transform: rotate(72.5deg) translate(-170px, 0px);">20 FS</span>
-                <span style="transform: rotate(117.5deg) translate(-170px, 0px);">3000 ₽</span>
-                <span style="transform: rotate(162.5deg) translate(-170px, 0px);">100 FS</span>
-                <span style="transform: rotate(207.5deg) translate(-170px, 0px);">1500 ₽</span>
-                <span style="transform: rotate(252.5deg) translate(-170px, 0px);">60 FS</span>
-                <span style="transform: rotate(297.5deg) translate(-170px, 0px);">1000 ₽</span>
-                <span style="transform: rotate(342.5deg) translate(-170px, 0px);">40 FS</span>
+                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">500 ₽</span>
+                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">20 FS</span>
+                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">3000 ₽</span>
+                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">100 FS</span>
+                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">1500 ₽</span>
+                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">60 FS</span>
+                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">1000 ₽</span>
+                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-170px, 0px);">40 FS</span>
             </div>
             <div class="center-logo">Baboss</div>
         </div>
@@ -202,7 +211,7 @@
             resultDiv.textContent = '';
             resultDiv.innerHTML = '';
 
-            wheel.style.transition = 'transform 8s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
+            wheel.style.transition = 'transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
             wheel.classList.remove('stop');
 
             const totalWeight = weights.reduce((a, b) => a + b, 0);
@@ -248,7 +257,7 @@
                 }, 100);
                 isSpinning = false;
                 spinButton.disabled = false;
-            }, 8000);
+            }, 5000); // Соответствует длительности transition
         });
     </script>
 </body>
