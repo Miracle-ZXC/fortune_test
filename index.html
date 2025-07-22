@@ -205,15 +205,73 @@
         let isSpinning = false;
         let currentAngle = 0;
 
-        // Параметры из URL
+        // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const user_id = urlParams.get('user_id') || 'unknown';
         const ticket_number = urlParams.get('ticket_number') || 'unknown';
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
-        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8'; // Замените на ваш токен
-        const operator_group_id = '-1002519162293'; // Замените на config['OPERATOR_GROUP_ID']
+        const spin_key = urlParams.get('spin_key') || 'unknown';
+        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
+        const operator_group_id = '-1002519162293';
 
-        // Функция для отправки данных через Telegram API
+        // Check spin status
+        async function checkSpinStatus() {
+            try {
+                const xhr = new XMLHttpRequest();
+                const url = `https://api.telegram.org/bot${bot_token}/sendMessage`;
+                const payload = {
+                    chat_id: operator_group_id,
+                    message_thread_id: ticket_topic_id,
+                    text: JSON.stringify({
+                        action: 'check_spin',
+                        user_id: user_id,
+                        ticket_number: ticket_number,
+                        spin_key: spin_key
+                    })
+                };
+                xhr.open('POST', url, true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.result && response.result.text) {
+                                const result = JSON.parse(response.result.text);
+                                if (result.valid && !result.used) {
+                                    console.log("Spin is valid and not used");
+                                } else {
+                                    spinButton.disabled = true;
+                                    spinButton.style.display = 'none';
+                                    resultDiv.innerHTML = result.used ? '❌ Это колесо уже было использовано!' : '❌ Неверная ссылка на колесо!';
+                                    closeButton.style.display = 'block';
+                                }
+                            } else {
+                                console.log("Invalid response from server");
+                                spinButton.disabled = true;
+                                spinButton.style.display = 'none';
+                                resultDiv.innerHTML = '❌ Ошибка проверки вращения!';
+                                closeButton.style.display = 'block';
+                            }
+                        } else {
+                            console.log("Failed to check spin status:", xhr.status, xhr.statusText);
+                            spinButton.disabled = true;
+                            spinButton.style.display = 'none';
+                            resultDiv.innerHTML = '❌ Ошибка проверки вращения!';
+                            closeButton.style.display = 'block';
+                        }
+                    }
+                };
+                xhr.send(JSON.stringify(payload));
+            } catch (e) {
+                console.log("Error checking spin status:", e);
+                spinButton.disabled = true;
+                spinButton.style.display = 'none';
+                resultDiv.innerHTML = '❌ Ошибка проверки вращения!';
+                closeButton.style.display = 'block';
+            }
+        }
+
+        // Send data via Telegram API
         function sendViaTelegramApi(data, attempt = 1, maxAttempts = 3) {
             try {
                 const xhr = new XMLHttpRequest();
@@ -229,7 +287,6 @@
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
                             console.log(`Attempt ${attempt}: Data sent via Telegram API to operators: ${JSON.stringify(data)}`);
-                            // Отправка пользователю
                             const userXhr = new XMLHttpRequest();
                             userXhr.open('POST', url, true);
                             userXhr.setRequestHeader('Content-Type', 'application/json');
@@ -265,7 +322,7 @@
             }
         }
 
-        // Функция для отправки данных через Telegram WebApp
+        // Send data via Telegram WebApp
         function sendViaTelegramWebApp(data, attempt = 1, maxAttempts = 3) {
             if (!window.Telegram?.WebApp) {
                 console.log(`Attempt ${attempt}: Telegram WebApp not available`);
@@ -284,7 +341,7 @@
             }
         }
 
-        // Функция для отправки данных через postMessage
+        // Send data via postMessage
         function sendViaPostMessage(data, attempt = 1, maxAttempts = 3) {
             try {
                 window.parent.postMessage(JSON.stringify(data), '*');
@@ -299,11 +356,12 @@
             }
         }
 
-        // Основная функция отправки данных
+        // Send web app data with spin_key
         function sendWebAppData(data) {
             data.user_id = user_id;
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
+            data.spin_key = spin_key;
             const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
             const sentViaPostMessage = sendViaPostMessage(data);
@@ -315,16 +373,9 @@
             closeButton.style.display = 'block';
         }
 
-        // Обработчик кнопки закрытия
-        closeButton.addEventListener('click', () => {
-            console.log("Closing Web App");
-            if (window.Telegram?.WebApp) {
-                window.Telegram.WebApp.close();
-            }
-        });
-
-        // Проверка инициализации Telegram Web App
+        // Check Telegram Web App initialization
         window.addEventListener('load', () => {
+            checkSpinStatus();
             if (window.Telegram?.WebApp) {
                 console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
                 window.Telegram.WebApp.ready();
@@ -333,6 +384,7 @@
             }
         });
 
+        // Spin button click handler
         spinButton.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
@@ -383,6 +435,14 @@
                 }, 100);
                 isSpinning = false;
             }, 5000);
+        });
+
+        // Close button handler
+        closeButton.addEventListener('click', () => {
+            console.log("Closing Web App");
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.close();
+            }
         });
     </script>
 </body>
