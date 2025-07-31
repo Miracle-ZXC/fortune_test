@@ -212,7 +212,7 @@
         const closeButton = document.getElementById('closeButton');
         const sectorText = document.getElementById('sectorText');
 
-        // Define prizes for each wheel type (logical order for weights and prize calculation)
+        // Define prizes for each wheel type
         const wheelPrizes = {
             '1': ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"],
             '2': ["30 FS", "750 ₽", "50 FS", "1500 ₽", "80 FS", "2000 ₽", "120 FS", "4000 ₽"],
@@ -221,7 +221,7 @@
             '5': ["60 FS", "1500 ₽", "80 FS", "3000 ₽", "150 FS", "4000 ₽", "250 FS", "7500 ₽"]
         };
 
-        // Define weights for each wheel type (70% for small, 15% for mid1, 10% for mid2, 5% for big)
+        // Define weights for each wheel type
         const wheelWeights = {
             '1': [0.35, 0.35, 0.075, 0.075, 0.05, 0.05, 0.025, 0.025],
             '2': [0.35, 0.35, 0.075, 0.075, 0.05, 0.05, 0.025, 0.025],
@@ -243,18 +243,19 @@
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
         const spin_key = urlParams.get('spin_key') || 'unknown';
         const wheel_type = urlParams.get('wheel_type') || '1';
-        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8'; // Note: This is insecure; ideally, move to server-side
+        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
         const operator_group_id = '-1002519162293';
 
         // Set prizes and weights based on wheel_type
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
         const weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Define the order for sector texts and weights to match the wheel layout
-        const orderedPrizes = [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]];
-        const orderedWeights = [weights[1], weights[0], weights[7], weights[6], weights[5], weights[4], weights[3], weights[2]];
+        // Original prize order: [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]]
+        // Shift 4 sectors clockwise: equivalent to moving 4 positions forward in the array
+        const orderedPrizes = [prizes[5], prizes[4], prizes[3], prizes[2], prizes[1], prizes[0], prizes[7], prizes[6]];
+        const orderedWeights = [weights[5], weights[4], weights[3], weights[2], weights[1], weights[0], weights[7], weights[6]];
 
-        // Dynamically create sector text in the ordered prizes
+        // Text angles remain the same, as they are tied to the conic-gradient sectors
         const textAngles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
         orderedPrizes.forEach((prize, index) => {
             const span = document.createElement('span');
@@ -340,7 +341,7 @@
                 return false;
             }
             try {
-                data.wheel_type = wheel_type; // Include wheel_type in the data sent
+                data.wheel_type = wheel_type;
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
                 return true;
@@ -356,7 +357,7 @@
         // Send data via postMessage
         function sendViaPostMessage(data, attempt = 1, maxAttempts = 3) {
             try {
-                data.wheel_type = wheel_type; // Include wheel_type in the data sent
+                data.wheel_type = wheel_type;
                 window.parent.postMessage(JSON.stringify(data), '*');
                 console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
                 return true;
@@ -375,13 +376,12 @@
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
             data.spin_key = spin_key;
-            data.wheel_type = wheel_type; // Ensure wheel_type is included
+            data.wheel_type = wheel_type;
             const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
-                // Mark as spun in localStorage to prevent reload spins
                 localStorage.setItem(spunKey, 'true');
             } else {
                 console.log("All attempts to send data failed");
@@ -416,12 +416,12 @@
             // Get the prize for the chosen sector
             const prize = orderedPrizes[randomIndex];
 
-            // Calculate the target theta for the chosen sector (centered around text angle 27.5 offset)
+            // Calculate the target theta for the chosen sector (centered around text angle)
             const sectorStart = randomIndex * sectorSize;
-            const middleOffset = 27.5; // Matching the text placement offset
+            const middleOffset = 27.5;
             const safeStart = safeZone;
             const safeEnd = sectorSize - safeZone;
-            const theta = sectorStart + middleOffset + (Math.random() * (safeEnd - safeStart - 20) + (safeStart - middleOffset + 10)); // Adjusted around middle
+            const theta = sectorStart + middleOffset + (Math.random() * (safeEnd - safeStart - 20) + (safeStart - middleOffset + 10));
 
             // Pointer is at 180 degrees (left side)
             const pointerAngle = 180;
