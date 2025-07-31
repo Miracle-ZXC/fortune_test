@@ -189,7 +189,7 @@
             from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Playfair+Display:wght@700&family=Roboto:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Playfair+Display:wght@700&family=Roboto:wght=700&display=swap');
     </style>
 </head>
 <body>
@@ -250,7 +250,7 @@
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
         const weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Define ordered prizes and weights, swapping text labels for opposite sectors
+        // Define ordered prizes and weights
         const orderedPrizes = [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]];
         const orderedWeights = [weights[1], weights[0], weights[7], weights[6], weights[5], weights[4], weights[3], weights[2]];
 
@@ -412,8 +412,9 @@
                 }
             }
 
-            // Get the prize for the chosen sector
-            const prize = orderedPrizes[randomIndex];
+            // Get the prize from the opposite sector
+            const oppositeIndex = (randomIndex + 4) % 8;
+            const prize = orderedPrizes[oppositeIndex];
 
             // Calculate the target theta for the chosen sector (centered around text angle)
             const sectorStart = randomIndex * sectorSize;
