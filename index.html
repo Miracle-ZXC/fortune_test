@@ -6,7 +6,6 @@
     <title>Колесо фортуны Baboss</title>
     <script src="https://telegram.org/js/telegram-web-app.js?version=7.2"></script>
     <style>
-        /* CSS остаётся без изменений */
         body {
             display: flex;
             flex-direction: column;
@@ -249,7 +248,7 @@
         const admin_id = urlParams.get('admin_id');
         const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
         const operator_group_id = '-1002519162293';
-        const general_topic_id = '2008'; // Замените на значение из config['GENERAL_TOPIC_ID']
+        const general_topic_id = '2008';
 
         // Set prizes and weights based on wheel_type
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
@@ -275,6 +274,9 @@
                 window.Telegram.WebApp.ready();
             } else {
                 console.log("Telegram WebApp not initialized");
+                resultDiv.innerHTML = '❌ Telegram WebApp не инициализирован';
+                closeButton.style.display = 'block';
+                spinButton.style.display = 'none';
             }
         });
 
@@ -313,33 +315,35 @@
                 const data = await response.json();
                 console.log(`Spin check response data: ${JSON.stringify(data)}`);
 
-                if (data.ok && data.result && data.result.text) {
-                    try {
-                        const spinInfo = JSON.parse(data.result.text);
-                        console.log(`Parsed spin info: ${JSON.stringify(spinInfo)}`);
-                        if (!spinInfo.valid) {
-                            console.error(`Invalid spin: ${spinInfo.error}`);
-                            resultDiv.innerHTML = `❌ Ошибка: ${spinInfo.error || 'Недействительная ссылка на колесо'}`;
-                            closeButton.style.display = 'block';
-                            spinButton.style.display = 'none';
-                            return;
-                        }
-                        if (spinInfo.used) {
-                            console.error('Spin already used');
-                            resultDiv.innerHTML = '❌ Это колесо уже было использовано';
-                            closeButton.style.display = 'block';
-                            spinButton.style.display = 'none';
-                            return;
-                        }
-                    } catch (e) {
-                        console.error(`Failed to parse spin info: ${e}, raw text: ${data.result.text}`);
-                        resultDiv.innerHTML = '❌ Ошибка проверки спина';
-                        closeButton.style.display = 'block';
-                        spinButton.style.display = 'none';
-                    }
-                } else {
+                if (!data.ok || !data.result || !data.result.text) {
                     console.error(`Invalid response from Telegram API for spin check: ${JSON.stringify(data)}`);
                     resultDiv.innerHTML = '❌ Не удалось проверить спин';
+                    closeButton.style.display = 'block';
+                    spinButton.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const spinInfo = JSON.parse(data.result.text);
+                    console.log(`Parsed spin info: ${JSON.stringify(spinInfo)}`);
+                    if (!spinInfo.valid) {
+                        console.error(`Invalid spin: ${spinInfo.error || 'Unknown error'}`);
+                        resultDiv.innerHTML = `❌ Ошибка: ${spinInfo.error || 'Недействительная ссылка на колесо'}`;
+                        closeButton.style.display = 'block';
+                        spinButton.style.display = 'none';
+                        return;
+                    }
+                    if (spinInfo.used) {
+                        console.error('Spin already used');
+                        resultDiv.innerHTML = '❌ Это колесо уже было использовано';
+                        closeButton.style.display = 'block';
+                        spinButton.style.display = 'none';
+                        localStorage.setItem(spunKey, 'true');
+                        return;
+                    }
+                } catch (e) {
+                    console.error(`Failed to parse spin info: ${e}, raw text: ${data.result.text}`);
+                    resultDiv.innerHTML = '❌ Ошибка парсинга данных спина';
                     closeButton.style.display = 'block';
                     spinButton.style.display = 'none';
                 }
@@ -367,38 +371,50 @@
                 const data = await response.json();
                 console.log(`Fetch response data: ${JSON.stringify(data)}`);
 
-                if (data.ok && data.result && data.result.text) {
-                    try {
-                        const raffleInfo = JSON.parse(data.result.text);
-                        console.log(`Parsed raffle info: ${JSON.stringify(raffleInfo)}`);
-                        if (raffleInfo.error) {
-                            console.error(`Raffle info error: ${raffleInfo.error}`);
-                            resultDiv.innerHTML = `❌ Ошибка: ${raffleInfo.error}`;
-                            closeButton.style.display = 'block';
-                            return;
-                        }
-                        winnerCount = raffleInfo.winner_count || 1;
-                        winners = raffleInfo.participants.slice(0, winnerCount).map((p, index) => ({
-                            user_id: p.user_id,
-                            username: p.username || `User_${p.user_id}`,
-                            prize: orderedPrizes[index % orderedPrizes.length],
-                            spin_key: `SPIN_${p.user_id}_${Date.now()}_${index}`
-                        }));
-                        displayWinners();
-                    } catch (e) {
-                        console.error(`Failed to parse raffle info: ${e}, raw text: ${data.result.text}`);
-                        resultDiv.innerHTML = '❌ Ошибка парсинга данных розыгрыша';
-                        closeButton.style.display = 'block';
-                    }
-                } else {
+                if (!data.ok || !data.result || !data.result.text) {
                     console.error(`Invalid response from Telegram API: ${JSON.stringify(data)}`);
                     resultDiv.innerHTML = '❌ Не удалось загрузить данные розыгрыша';
                     closeButton.style.display = 'block';
+                    spinButton.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const raffleInfo = JSON.parse(data.result.text);
+                    console.log(`Parsed raffle info: ${JSON.stringify(raffleInfo)}`);
+                    if (raffleInfo.error) {
+                        console.error(`Raffle info error: ${raffleInfo.error}`);
+                        resultDiv.innerHTML = `❌ Ошибка: ${raffleInfo.error}`;
+                        closeButton.style.display = 'block';
+                        spinButton.style.display = 'none';
+                        return;
+                    }
+                    winnerCount = raffleInfo.winner_count || 1;
+                    winners = raffleInfo.participants.slice(0, winnerCount).map((p, index) => ({
+                        user_id: p.user_id,
+                        username: p.username || `User_${p.user_id}`,
+                        prize: orderedPrizes[index % orderedPrizes.length],
+                        spin_key: `SPIN_${p.user_id}_${Date.now()}_${index}`,
+                        wheel_type: raffleInfo.wheel_type || '1'
+                    }));
+                    if (winners.length === 0) {
+                        resultDiv.innerHTML = '❌ Нет доступных участников';
+                        closeButton.style.display = 'block';
+                        spinButton.style.display = 'none';
+                        return;
+                    }
+                    displayWinners();
+                } catch (e) {
+                    console.error(`Failed to parse raffle info: ${e}, raw text: ${data.result.text}`);
+                    resultDiv.innerHTML = '❌ Ошибка парсинга данных розыгрыша';
+                    closeButton.style.display = 'block';
+                    spinButton.style.display = 'none';
                 }
             } catch (e) {
                 console.error(`Failed to fetch winners: ${e}`);
                 resultDiv.innerHTML = '❌ Ошибка загрузки данных';
                 closeButton.style.display = 'block';
+                spinButton.style.display = 'none';
             }
         }
 
@@ -409,6 +425,7 @@
                 winnerDiv.textContent = `${winner.username}: ${winner.prize}`;
                 resultDiv.appendChild(winnerDiv);
             });
+            resultDiv.style.opacity = '1';
             if (winners.length === 0) {
                 resultDiv.innerHTML = '❌ Нет доступных победителей';
                 closeButton.style.display = 'block';
@@ -421,31 +438,37 @@
             try {
                 const xhr = new XMLHttpRequest();
                 const url = `https://api.telegram.org/bot${bot_token}/sendMessage`;
-                const payload = {
-                    chat_id: operator_group_id,
-                    text: JSON.stringify({ raffle_id: raffle_id, winners: data.winners, wheel_type: wheel_type }),
-                    message_thread_id: general_topic_id
-                };
+                const payload = raffle_id
+                    ? {
+                          chat_id: operator_group_id,
+                          text: JSON.stringify({ raffle_id: raffle_id, winners: data.winners, wheel_type: wheel_type }),
+                          message_thread_id: general_topic_id
+                      }
+                    : {
+                          chat_id: operator_group_id,
+                          text: JSON.stringify({ prize: data.prize, user_id: user_id, ticket_number: ticket_number, ticket_topic_id: ticket_topic_id, spin_key: spin_key, wheel_type: wheel_type }),
+                          message_thread_id: general_topic_id
+                      };
                 xhr.open('POST', url, true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
                             console.log(`Attempt ${attempt}: Data sent via Telegram API: ${JSON.stringify(data)}`);
-                            winners.forEach(winner => {
+                            if (!raffle_id) {
                                 const userXhr = new XMLHttpRequest();
                                 userXhr.open('POST', url, true);
                                 userXhr.setRequestHeader('Content-Type', 'application/json');
                                 userXhr.onreadystatechange = function () {
                                     if (userXhr.readyState === 4 && userXhr.status === 200) {
-                                        console.log(`Attempt ${attempt}: Notification sent to user_id=${winner.user_id}`);
+                                        console.log(`Attempt ${attempt}: Notification sent to user_id=${user_id}`);
                                     }
                                 };
                                 userXhr.send(JSON.stringify({
-                                    chat_id: winner.user_id,
-                                    text: `✨ Ура! Ты выиграл: ${winner.prize}! 🎰 Продолжай крутить удачу в Baboss Casino! 😎`
+                                    chat_id: user_id,
+                                    text: `✨ Ура! Ты выиграл: ${data.prize}! 🎰 Продолжай крутить удачу в Baboss Casino! 😎`
                                 }));
-                            });
+                            }
                         } else if (attempt < maxAttempts) {
                             console.log(`Attempt ${attempt}: Failed to send via Telegram API: ${xhr.status} ${xhr.statusText}`);
                             setTimeout(() => sendViaTelegramApi(data, attempt + 1, maxAttempts), 2000);
@@ -508,6 +531,7 @@
                 localStorage.setItem('spun_' + raffle_id, 'true');
             } else {
                 console.log("All attempts to send data failed");
+                resultDiv.innerHTML = '❌ Ошибка отправки результатов';
             }
             closeButton.style.display = 'block';
         }
@@ -521,6 +545,9 @@
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Individual spin data sent successfully");
                 localStorage.setItem('spun_' + spin_key, 'true');
+            } else {
+                console.log("All attempts to send individual spin data failed");
+                resultDiv.innerHTML = '❌ Ошибка отправки результата';
             }
             closeButton.style.display = 'block';
         }
