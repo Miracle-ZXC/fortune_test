@@ -6,7 +6,7 @@
     <title>Колесо фортуны Baboss</title>
     <script src="https://telegram.org/js/telegram-web-app.js?version=7.2"></script>
     <style>
-        /* Оставьте существующий CSS без изменений */
+        /* CSS остаётся без изменений */
         body {
             display: flex;
             flex-direction: column;
@@ -291,6 +291,63 @@
                 spinButton.style.display = 'none';
                 resultDiv.innerHTML = '❌ Это колесо уже было использовано';
                 closeButton.style.display = 'block';
+            } else {
+                // Check spin validity with Telegram API
+                checkSpinValidity();
+            }
+        }
+
+        async function checkSpinValidity() {
+            try {
+                console.log(`Checking spin validity for user_id=${user_id}, spin_key=${spin_key}, wheel_type=${wheel_type}`);
+                const response = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: operator_group_id,
+                        text: JSON.stringify({ action: 'check_spin', user_id: user_id, spin_key: spin_key, wheel_type: wheel_type }),
+                        message_thread_id: general_topic_id
+                    })
+                });
+                console.log(`Spin check response status: ${response.status}`);
+                const data = await response.json();
+                console.log(`Spin check response data: ${JSON.stringify(data)}`);
+
+                if (data.ok && data.result && data.result.text) {
+                    try {
+                        const spinInfo = JSON.parse(data.result.text);
+                        console.log(`Parsed spin info: ${JSON.stringify(spinInfo)}`);
+                        if (!spinInfo.valid) {
+                            console.error(`Invalid spin: ${spinInfo.error}`);
+                            resultDiv.innerHTML = `❌ Ошибка: ${spinInfo.error || 'Недействительная ссылка на колесо'}`;
+                            closeButton.style.display = 'block';
+                            spinButton.style.display = 'none';
+                            return;
+                        }
+                        if (spinInfo.used) {
+                            console.error('Spin already used');
+                            resultDiv.innerHTML = '❌ Это колесо уже было использовано';
+                            closeButton.style.display = 'block';
+                            spinButton.style.display = 'none';
+                            return;
+                        }
+                    } catch (e) {
+                        console.error(`Failed to parse spin info: ${e}, raw text: ${data.result.text}`);
+                        resultDiv.innerHTML = '❌ Ошибка проверки спина';
+                        closeButton.style.display = 'block';
+                        spinButton.style.display = 'none';
+                    }
+                } else {
+                    console.error(`Invalid response from Telegram API for spin check: ${JSON.stringify(data)}`);
+                    resultDiv.innerHTML = '❌ Не удалось проверить спин';
+                    closeButton.style.display = 'block';
+                    spinButton.style.display = 'none';
+                }
+            } catch (e) {
+                console.error(`Failed to check spin validity: ${e}`);
+                resultDiv.innerHTML = '❌ Ошибка проверки спина';
+                closeButton.style.display = 'block';
+                spinButton.style.display = 'none';
             }
         }
 
