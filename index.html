@@ -6,6 +6,7 @@
     <title>Колесо фортуны Baboss</title>
     <script src="https://telegram.org/js/telegram-web-app.js?version=7.2"></script>
     <style>
+        /* Стили остаются без изменений */
         body {
             display: flex;
             flex-direction: column;
@@ -198,16 +199,7 @@
     <div class="wheel-container">
         <div class="arrow"></div>
         <div id="wheel">
-            <div class="sector-text">
-                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">500 ₽</span>
-                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">20 FS</span>
-                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">3000 ₽</span>
-                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">100 FS</span>
-                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">1500 ₽</span>
-                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">60 FS</span>
-                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">1000 ₽</span>
-                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);">40 FS</span>
-            </div>
+            <div class="sector-text" id="sectorText"></div>
             <button id="spinButton" class="center-button">Крутить!</button>
         </div>
     </div>
@@ -219,14 +211,64 @@
         const spinButton = document.getElementById('spinButton');
         const resultDiv = document.getElementById('result');
         const closeButton = document.getElementById('closeButton');
+        const sectorText = document.getElementById('sectorText');
 
-        const prizes = ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"];
-        const colors = ["#2e3a3e", "#d81b7a", "#ff6f20", "#ffeb3b", "#4caf50", "#26c6da", "#3f51b5", "#ab47bc"];
-        const weights = [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015];
-        const sectorSize = 45;
-        const safeZone = 10;
-        let isSpinning = false;
-        let currentAngle = 0;
+        // Define prizes for each wheel type
+        const wheelPrizes = {
+            '1': [
+                { value: "500 ₽", weight: 0.4 },
+                { value: "20 FS", weight: 0.4 },
+                { value: "3000 ₽", weight: 0.015 },
+                { value: "100 FS", weight: 0.015 },
+                { value: "1500 ₽", weight: 0.035 },
+                { value: "60 FS", weight: 0.035 },
+                { value: "1000 ₽", weight: 0.05 },
+                { value: "40 FS", weight: 0.05 }
+            ],
+            '2': [
+                { value: "1000 ₽", weight: 0.4 },
+                { value: "30 FS", weight: 0.4 },
+                { value: "5000 ₽", weight: 0.015 },
+                { value: "150 FS", weight: 0.015 },
+                { value: "2500 ₽", weight: 0.035 },
+                { value: "80 FS", weight: 0.035 },
+                { value: "1500 ₽", weight: 0.05 },
+                { value: "50 FS", weight: 0.05 }
+            ],
+            '3': [
+                { value: "1500 ₽", weight: 0.4 },
+                { value: "40 FS", weight: 0.4 },
+                { value: "7000 ₽", weight: 0.015 },
+                { value: "200 FS", weight: 0.015 },
+                { value: "3500 ₽", weight: 0.035 },
+                { value: "100 FS", weight: 0.035 },
+                { value: "2000 ₽", weight: 0.05 },
+                { value: "60 FS", weight: 0.05 }
+            ],
+            '4': [
+                { value: "2000 ₽", weight: 0.4 },
+                { value: "50 FS", weight: 0.4 },
+                { value: "10000 ₽", weight: 0.015 },
+                { value: "250 FS", weight: 0.015 },
+                { value: "5000 ₽", weight: 0.035 },
+                { value: "120 FS", weight: 0.035 },
+                { value: "3000 ₽", weight: 0.05 },
+                { value: "80 FS", weight: 0.05 }
+            ],
+            '5': [
+                { value: "3000 ₽", weight: 0.4 },
+                { value: "60 FS", weight: 0.4 },
+                { value: "15000 ₽", weight: 0.015 },
+                { value: "300 FS", weight: 0.015 },
+                { value: "7500 ₽", weight: 0.035 },
+                { value: "150 FS", weight: 0.035 },
+                { value: "4000 ₽", weight: 0.05 },
+                { value: "100 FS", weight: 0.05 }
+            ]
+        };
+
+        // Angles for each sector
+        const angles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
 
         // Parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -234,10 +276,83 @@
         const ticket_number = urlParams.get('ticket_number') || 'unknown';
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
         const spin_key = urlParams.get('spin_key') || 'unknown';
+        const wheel_type = urlParams.get('wheel_type') || '1';
         const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8'; // Note: This is insecure; ideally, move to server-side
         const operator_group_id = '-1002519162293';
 
-        // Check if this spin_key has already been used locally (to prevent reload spins)
+        // Get prizes and weights for the selected wheel
+        const prizesData = wheelPrizes[wheel_type] || wheelPrizes['1'];
+        const prizes = prizesData.map(item => item.value);
+        const weights = prizesData.map(item => item.weight);
+
+        // Dynamically generate sector text
+        function generateSectorText() {
+            sectorText.innerHTML = '';
+            prizes.forEach((prize, index) => {
+                const span = document.createElement('span');
+                span.style = `--rotate: ${angles[index]}deg; transform: rotate(var(--rotate)) translate(-110px, 0px);`;
+                span.textContent = prize;
+                sectorText.appendChild(span);
+            });
+        }
+
+        // Call to generate sector text on page load
+        generateSectorText();
+
+        // Check Telegram Web App initialization
+        window.addEventListener('load', () => {
+            if (window.Telegram?.WebApp) {
+                console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
+                window.Telegram.WebApp.ready();
+            } else {
+                console.log("Telegram WebApp not initialized");
+            }
+
+            // Check spin validity
+            fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: user_id,
+                    text: JSON.stringify({
+                        action: 'check_spin',
+                        user_id: user_id,
+                        ticket_number: ticket_number,
+                        ticket_topic_id: ticket_topic_id,
+                        spin_key: spin_key,
+                        wheel_type: wheel_type
+                    })
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    console.log(`Spin check failed: ${JSON.stringify(data)}`);
+                    spinButton.disabled = true;
+                    spinButton.style.display = 'none';
+                    resultDiv.innerHTML = '❌ Ошибка проверки вращения';
+                    closeButton.style.display = 'block';
+                    return;
+                }
+                const result = JSON.parse(data.result.text);
+                console.log(`Spin check result: ${JSON.stringify(result)}`);
+                if (!result.valid || result.used) {
+                    spinButton.disabled = true;
+                    spinButton.style.display = 'none';
+                    resultDiv.innerHTML = result.used ? '❌ Это колесо уже было использовано' : '❌ Неверная ссылка на колесо';
+                    closeButton.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.log(`Spin check error: ${error}`);
+                spinButton.disabled = true;
+                spinButton.style.display = 'none';
+                resultDiv.innerHTML = '❌ Ошибка проверки вращения';
+                closeButton.style.display = 'block';
+            });
+        });
+
+        // Check if this spin_key has already been used locally
         const spunKey = 'spun_' + spin_key;
         if (localStorage.getItem(spunKey)) {
             spinButton.disabled = true;
@@ -331,34 +446,24 @@
             }
         }
 
-        // Send web app data with spin_key
+        // Send web app data with spin_key and wheel_type
         function sendWebAppData(data) {
             data.user_id = user_id;
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
             data.spin_key = spin_key;
+            data.wheel_type = wheel_type;
             const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
-                // Mark as spun in localStorage to prevent reload spins
                 localStorage.setItem(spunKey, 'true');
             } else {
                 console.log("All attempts to send data failed");
             }
             closeButton.style.display = 'block';
         }
-
-        // Check Telegram Web App initialization
-        window.addEventListener('load', () => {
-            if (window.Telegram?.WebApp) {
-                console.log(`Telegram WebApp initialized, version: ${window.Telegram.WebApp.version}`);
-                window.Telegram.WebApp.ready();
-            } else {
-                console.log("Telegram WebApp not initialized");
-            }
-        });
 
         // Spin button click handler
         spinButton.addEventListener('click', () => {
@@ -383,6 +488,8 @@
                 }
             }
 
+            const sectorSize = 45;
+            const safeZone = 10;
             const sectorStart = (randomIndex * sectorSize);
             const sectorEnd = sectorStart + sectorSize;
             const safeStart = sectorStart + safeZone;
