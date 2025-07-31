@@ -214,14 +214,14 @@
 
         // Define prizes for each wheel type
         const wheelPrizes = {
-            '1': ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"],
+            '1': ["40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽", "20 FS", "500 ₽"],
             '2': ["30 FS", "750 ₽", "50 FS", "1500 ₽", "80 FS", "2000 ₽", "120 FS", "4000 ₽"],
             '3': ["40 FS", "1000 ₽", "60 FS", "2000 ₽", "100 FS", "2500 ₽", "150 FS", "5000 ₽"],
             '4': ["50 FS", "1250 ₽", "70 FS", "2500 ₽", "120 FS", "3000 ₽", "200 FS", "6000 ₽"],
             '5': ["60 FS", "1500 ₽", "80 FS", "3000 ₽", "150 FS", "4000 ₽", "250 FS", "7500 ₽"]
         };
 
-        // Define weights for each wheel type (adjust if needed)
+        // Define weights for each wheel type
         const wheelWeights = {
             '1': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015],
             '2': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015],
@@ -409,9 +409,8 @@
             }
 
             const sectorStart = (randomIndex * sectorSize);
-            const sectorEnd = sectorStart + sectorSize;
             const safeStart = sectorStart + safeZone;
-            const safeEnd = sectorEnd - safeZone;
+            const safeEnd = sectorStart + sectorSize - safeZone;
             const randomAngle = Math.random() * (safeEnd - safeStart) + safeStart;
             const angle = (360 - randomAngle + 90) % 360;
             const minSpins = 3 * 360;
