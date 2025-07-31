@@ -6,6 +6,7 @@
     <title>Колесо фортуны Baboss</title>
     <script src="https://telegram.org/js/telegram-web-app.js?version=7.2"></script>
     <style>
+        /* Оставьте существующий CSS без изменений */
         body {
             display: flex;
             flex-direction: column;
@@ -248,6 +249,7 @@
         const admin_id = urlParams.get('admin_id');
         const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
         const operator_group_id = '-1002519162293';
+        const general_topic_id = 'YOUR_GENERAL_TOPIC_ID'; // Замените на значение из config['GENERAL_TOPIC_ID']
 
         // Set prizes and weights based on wheel_type
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
@@ -294,32 +296,50 @@
 
         async function fetchWinners() {
             try {
+                console.log(`Fetching raffle info for raffle_id=${raffle_id}, bot_token=${bot_token}, operator_group_id=${operator_group_id}, general_topic_id=${general_topic_id}`);
                 const response = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         chat_id: operator_group_id,
                         text: JSON.stringify({ action: 'get_raffle_info', raffle_id: raffle_id }),
-                        message_thread_id: 'general' // Replace with actual thread ID if needed
+                        message_thread_id: general_topic_id
                     })
                 });
+                console.log(`Fetch response status: ${response.status}`);
                 const data = await response.json();
+                console.log(`Fetch response data: ${JSON.stringify(data)}`);
+
                 if (data.ok && data.result && data.result.text) {
-                    const raffleInfo = JSON.parse(data.result.text);
-                    winnerCount = raffleInfo.winner_count || 1;
-                    winners = raffleInfo.participants.slice(0, winnerCount).map((p, index) => ({
-                        user_id: p.user_id,
-                        username: p.username || `User_${p.user_id}`,
-                        prize: orderedPrizes[index % orderedPrizes.length], // Assign prizes cyclically
-                        spin_key: `SPIN_${p.user_id}_${Date.now()}_${index}`
-                    }));
-                    displayWinners();
+                    try {
+                        const raffleInfo = JSON.parse(data.result.text);
+                        console.log(`Parsed raffle info: ${JSON.stringify(raffleInfo)}`);
+                        if (raffleInfo.error) {
+                            console.error(`Raffle info error: ${raffleInfo.error}`);
+                            resultDiv.innerHTML = `❌ Ошибка: ${raffleInfo.error}`;
+                            closeButton.style.display = 'block';
+                            return;
+                        }
+                        winnerCount = raffleInfo.winner_count || 1;
+                        winners = raffleInfo.participants.slice(0, winnerCount).map((p, index) => ({
+                            user_id: p.user_id,
+                            username: p.username || `User_${p.user_id}`,
+                            prize: orderedPrizes[index % orderedPrizes.length],
+                            spin_key: `SPIN_${p.user_id}_${Date.now()}_${index}`
+                        }));
+                        displayWinners();
+                    } catch (e) {
+                        console.error(`Failed to parse raffle info: ${e}, raw text: ${data.result.text}`);
+                        resultDiv.innerHTML = '❌ Ошибка парсинга данных розыгрыша';
+                        closeButton.style.display = 'block';
+                    }
                 } else {
+                    console.error(`Invalid response from Telegram API: ${JSON.stringify(data)}`);
                     resultDiv.innerHTML = '❌ Не удалось загрузить данные розыгрыша';
                     closeButton.style.display = 'block';
                 }
             } catch (e) {
-                console.error('Failed to fetch winners:', e);
+                console.error(`Failed to fetch winners: ${e}`);
                 resultDiv.innerHTML = '❌ Ошибка загрузки данных';
                 closeButton.style.display = 'block';
             }
@@ -347,7 +367,7 @@
                 const payload = {
                     chat_id: operator_group_id,
                     text: JSON.stringify({ raffle_id: raffle_id, winners: data.winners, wheel_type: wheel_type }),
-                    message_thread_id: 'general' // Replace with actual thread ID if needed
+                    message_thread_id: general_topic_id
                 };
                 xhr.open('POST', url, true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
@@ -370,6 +390,7 @@
                                 }));
                             });
                         } else if (attempt < maxAttempts) {
+                            console.log(`Attempt ${attempt}: Failed to send via Telegram API: ${xhr.status} ${xhr.statusText}`);
                             setTimeout(() => sendViaTelegramApi(data, attempt + 1, maxAttempts), 2000);
                         }
                     }
