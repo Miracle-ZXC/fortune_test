@@ -198,7 +198,16 @@
     <div class="wheel-container">
         <div class="arrow"></div>
         <div id="wheel">
-            <div class="sector-text" id="sectorText"></div>
+            <div class="sector-text">
+                <span style="--rotate: 27.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector0"></span>
+                <span style="--rotate: 72.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector1"></span>
+                <span style="--rotate: 117.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector2"></span>
+                <span style="--rotate: 162.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector3"></span>
+                <span style="--rotate: 207.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector4"></span>
+                <span style="--rotate: 252.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector5"></span>
+                <span style="--rotate: 297.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector6"></span>
+                <span style="--rotate: 342.5deg; transform: rotate(var(--rotate)) translate(-110px, 0px);" id="sector7"></span>
+            </div>
             <button id="spinButton" class="center-button">Крутить!</button>
         </div>
     </div>
@@ -210,9 +219,8 @@
         const spinButton = document.getElementById('spinButton');
         const resultDiv = document.getElementById('result');
         const closeButton = document.getElementById('closeButton');
-        const sectorText = document.getElementById('sectorText');
 
-        // Define prizes for each wheel type in the order matching the visual placement
+        // Define prizes for each wheel type
         const wheelPrizes = {
             '1': ["500 ₽", "20 FS", "3000 ₽", "100 FS", "1500 ₽", "60 FS", "1000 ₽", "40 FS"],
             '2': ["750 ₽", "30 FS", "4000 ₽", "120 FS", "2000 ₽", "80 FS", "1500 ₽", "50 FS"],
@@ -223,11 +231,11 @@
 
         // Define weights for each wheel type
         const wheelWeights = {
-            '1': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
-            '2': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
-            '3': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
-            '4': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
-            '5': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05]
+            '1': [0.4, 0.4, 0.03, 0.03, 0.035, 0.035, 0.05, 0.05],
+            '2': [0.4, 0.4, 0.03, 0.03, 0.035, 0.035, 0.05, 0.05],
+            '3': [0.4, 0.4, 0.03, 0.03, 0.035, 0.035, 0.05, 0.05],
+            '4': [0.4, 0.4, 0.03, 0.03, 0.035, 0.035, 0.05, 0.05],
+            '5': [0.4, 0.4, 0.03, 0.03, 0.035, 0.035, 0.05, 0.05]
         };
 
         const colors = ["#2e3a3e", "#d81b7a", "#ff6f20", "#ffeb3b", "#4caf50", "#26c6da", "#3f51b5", "#ab47bc"];
@@ -243,20 +251,16 @@
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
         const spin_key = urlParams.get('spin_key') || 'unknown';
         const wheel_type = urlParams.get('wheel_type') || '1';
-        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8'; // Note: This is insecure; ideally, move to server-side
+        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
         const operator_group_id = '-1002519162293';
 
-        // Set prizes based on wheel_type
+        // Set prizes and weights based on wheel_type
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
         const weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Dynamically create sector text
-        const angles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
+        // Set sector text content
         prizes.forEach((prize, index) => {
-            const span = document.createElement('span');
-            span.style = `--rotate: ${angles[index]}deg; transform: rotate(var(--rotate)) translate(-110px, 0px);`;
-            span.textContent = prize;
-            sectorText.appendChild(span);
+            document.getElementById(`sector${index}`).textContent = prize;
         });
 
         // Check Telegram Web App initialization
@@ -336,7 +340,7 @@
                 return false;
             }
             try {
-                data.wheel_type = wheel_type; // Include wheel_type in the data sent
+                data.wheel_type = wheel_type;
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
                 return true;
@@ -352,7 +356,7 @@
         // Send data via postMessage
         function sendViaPostMessage(data, attempt = 1, maxAttempts = 3) {
             try {
-                data.wheel_type = wheel_type; // Include wheel_type in the data sent
+                data.wheel_type = wheel_type;
                 window.parent.postMessage(JSON.stringify(data), '*');
                 console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
                 return true;
@@ -371,13 +375,12 @@
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
             data.spin_key = spin_key;
-            data.wheel_type = wheel_type; // Ensure wheel_type is included
+            data.wheel_type = wheel_type;
             const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
-                // Mark as spun in localStorage to prevent reload spins
                 localStorage.setItem(spunKey, 'true');
             } else {
                 console.log("All attempts to send data failed");
