@@ -250,23 +250,15 @@
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
         const weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Define the order for sector texts to match the original placement for accurate alignment
-        const textOrder = [
-            prizes[1],  // small ₽
-            prizes[0],  // small FS
-            prizes[7],  // big ₽
-            prizes[6],  // big FS
-            prizes[5],  // mid2 ₽
-            prizes[4],  // mid2 FS
-            prizes[3],  // mid1 ₽
-            prizes[2]   // mid1 FS
-        ];
+        // Define the order for sector texts and weights to match the wheel layout
+        const orderedPrizes = [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]];
+        const orderedWeights = [weights[1], weights[0], weights[7], weights[6], weights[5], weights[4], weights[3], weights[2]];
 
-        // Dynamically create sector text in the specified order
-        const angles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
-        textOrder.forEach((prize, index) => {
+        // Dynamically create sector text in the ordered prizes
+        const textAngles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
+        orderedPrizes.forEach((prize, index) => {
             const span = document.createElement('span');
-            span.style = `--rotate: ${angles[index]}deg; transform: rotate(var(--rotate)) translate(-110px, 0px);`;
+            span.style = `--rotate: ${textAngles[index]}deg; transform: rotate(var(--rotate)) translate(-110px, 0px);`;
             span.textContent = prize;
             sectorText.appendChild(span);
         });
@@ -409,36 +401,46 @@
             wheel.style.transition = 'transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
             wheel.classList.remove('stop');
 
-            const totalWeight = weights.reduce((a, b) => a + b, 0);
+            // Choose the sector index based on ordered weights
+            const totalWeight = orderedWeights.reduce((a, b) => a + b, 0);
             let random = Math.random() * totalWeight;
             let randomIndex = 0;
-            for (let i = 0; i < weights.length; i++) {
-                random -= weights[i];
+            for (let i = 0; i < orderedWeights.length; i++) {
+                random -= orderedWeights[i];
                 if (random <= 0) {
                     randomIndex = i;
                     break;
                 }
             }
 
-            const sectorStart = (randomIndex * sectorSize);
-            const sectorEnd = sectorStart + sectorSize;
-            const safeStart = sectorStart + safeZone;
-            const safeEnd = sectorEnd - safeZone;
-            const randomAngle = Math.random() * (safeEnd - safeStart) + safeStart;
-            const angle = (360 - randomAngle + 90) % 360;
-            const minSpins = 3 * 360;
-            const randomExtraSpins = Math.floor(Math.random() * 3 + 3) * 360;
-            const finalAngle = currentAngle + angle + minSpins + randomExtraSpins;
+            // Get the prize for the chosen sector
+            const prize = orderedPrizes[randomIndex];
 
-            wheel.style.transform = `rotate(${finalAngle}deg)`;
-            currentAngle = finalAngle % 360;
+            // Calculate the target theta for the chosen sector (centered around text angle 27.5 offset)
+            const sectorStart = randomIndex * sectorSize;
+            const middleOffset = 27.5; // Matching the text placement offset
+            const safeStart = safeZone;
+            const safeEnd = sectorSize - safeZone;
+            const theta = sectorStart + middleOffset + (Math.random() * (safeEnd - safeStart - 20) + (safeStart - middleOffset + 10)); // Adjusted around middle
 
+            // Pointer is at 180 degrees (left side)
+            const pointerAngle = 180;
+            let targetRotation = (pointerAngle - theta) % 360;
+            if (targetRotation < 0) targetRotation += 360;
+
+            // Add full spins for animation
+            const minFullSpins = 3;
+            const extraFullSpins = Math.floor(Math.random() * 3 + 3);
+            const fullSpins = (minFullSpins + extraFullSpins) * 360;
+
+            // Total rotation
+            const totalRotation = targetRotation + fullSpins + currentAngle;
+            wheel.style.transform = `rotate(${totalRotation}deg)`;
+            currentAngle = totalRotation % 360;
+
+            // After animation
             setTimeout(() => {
                 wheel.classList.add('stop');
-
-                const normalizedAngle = (currentAngle + 90) % 360;
-                const sectorIndex = Math.floor(normalizedAngle / sectorSize) % 8;
-                const prize = prizes[sectorIndex];
 
                 resultDiv.style.opacity = '0';
                 setTimeout(() => {
