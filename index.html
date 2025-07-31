@@ -250,12 +250,11 @@
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
         const weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Original prize order: [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]]
-        // Shift 4 sectors clockwise: equivalent to moving 4 positions forward in the array
-        const orderedPrizes = [prizes[5], prizes[4], prizes[3], prizes[2], prizes[1], prizes[0], prizes[7], prizes[6]];
-        const orderedWeights = [weights[5], weights[4], weights[3], weights[2], weights[1], weights[0], weights[7], weights[6]];
+        // Shifted 4 positions clockwise from [prizes[5], prizes[4], prizes[3], prizes[2], prizes[1], prizes[0], prizes[7], prizes[6]]
+        const orderedPrizes = [prizes[1], prizes[0], prizes[7], prizes[6], prizes[5], prizes[4], prizes[3], prizes[2]];
+        const orderedWeights = [weights[1], weights[0], weights[7], weights[6], weights[5], weights[4], weights[3], weights[2]];
 
-        // Text angles remain the same, as they are tied to the conic-gradient sectors
+        // Text angles remain the same, tied to conic-gradient sectors
         const textAngles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
         orderedPrizes.forEach((prize, index) => {
             const span = document.createElement('span');
