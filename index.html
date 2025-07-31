@@ -167,6 +167,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            text-align: center;
         }
         #closeButton {
             margin-top: 20px;
@@ -243,6 +244,8 @@
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
         const spin_key = urlParams.get('spin_key') || 'unknown';
         const wheel_type = urlParams.get('wheel_type') || '1';
+        const raffle_id = urlParams.get('raffle_id');
+        const admin_id = urlParams.get('admin_id');
         const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
         const operator_group_id = '-1002519162293';
 
@@ -273,13 +276,67 @@
             }
         });
 
-        // Check if this spin_key has already been used locally
-        const spunKey = 'spun_' + spin_key;
-        if (localStorage.getItem(spunKey)) {
-            spinButton.disabled = true;
-            spinButton.style.display = 'none';
-            resultDiv.innerHTML = '❌ Это колесо уже было использовано';
-            closeButton.style.display = 'block';
+        // If raffle_id is present, fetch winners
+        let winners = [];
+        let winnerCount = 1;
+        if (raffle_id) {
+            fetchWinners();
+        } else {
+            // Check if this spin_key has already been used locally
+            const spunKey = 'spun_' + spin_key;
+            if (localStorage.getItem(spunKey)) {
+                spinButton.disabled = true;
+                spinButton.style.display = 'none';
+                resultDiv.innerHTML = '❌ Это колесо уже было использовано';
+                closeButton.style.display = 'block';
+            }
+        }
+
+        async function fetchWinners() {
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${bot_token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: operator_group_id,
+                        text: JSON.stringify({ action: 'get_raffle_info', raffle_id: raffle_id }),
+                        message_thread_id: 'general' // Replace with actual thread ID if needed
+                    })
+                });
+                const data = await response.json();
+                if (data.ok && data.result && data.result.text) {
+                    const raffleInfo = JSON.parse(data.result.text);
+                    winnerCount = raffleInfo.winner_count || 1;
+                    winners = raffleInfo.participants.slice(0, winnerCount).map((p, index) => ({
+                        user_id: p.user_id,
+                        username: p.username || `User_${p.user_id}`,
+                        prize: orderedPrizes[index % orderedPrizes.length], // Assign prizes cyclically
+                        spin_key: `SPIN_${p.user_id}_${Date.now()}_${index}`
+                    }));
+                    displayWinners();
+                } else {
+                    resultDiv.innerHTML = '❌ Не удалось загрузить данные розыгрыша';
+                    closeButton.style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Failed to fetch winners:', e);
+                resultDiv.innerHTML = '❌ Ошибка загрузки данных';
+                closeButton.style.display = 'block';
+            }
+        }
+
+        function displayWinners() {
+            resultDiv.innerHTML = '';
+            winners.forEach(winner => {
+                const winnerDiv = document.createElement('div');
+                winnerDiv.textContent = `${winner.username}: ${winner.prize}`;
+                resultDiv.appendChild(winnerDiv);
+            });
+            if (winners.length === 0) {
+                resultDiv.innerHTML = '❌ Нет доступных победителей';
+                closeButton.style.display = 'block';
+                spinButton.style.display = 'none';
+            }
         }
 
         // Send data via Telegram API
@@ -289,36 +346,31 @@
                 const url = `https://api.telegram.org/bot${bot_token}/sendMessage`;
                 const payload = {
                     chat_id: operator_group_id,
-                    message_thread_id: data.ticket_topic_id,
-                    text: `🎡 Чат #${data.ticket_number}\nИгрок (user_id=${data.user_id}) выиграл: ${data.prize}`
+                    text: JSON.stringify({ raffle_id: raffle_id, winners: data.winners, wheel_type: wheel_type }),
+                    message_thread_id: 'general' // Replace with actual thread ID if needed
                 };
                 xhr.open('POST', url, true);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
-                            console.log(`Attempt ${attempt}: Data sent via Telegram API to operators: ${JSON.stringify(data)}`);
-                            const userXhr = new XMLHttpRequest();
-                            userXhr.open('POST', url, true);
-                            userXhr.setRequestHeader('Content-Type', 'application/json');
-                            userXhr.onreadystatechange = function () {
-                                if (userXhr.readyState === 4) {
-                                    if (userXhr.status === 200) {
-                                        console.log(`Attempt ${attempt}: Data sent via Telegram API to user: ${JSON.stringify(data)}`);
-                                    } else {
-                                        console.log(`Attempt ${attempt}: Failed to send to user via Telegram API: ${userXhr.status} ${userXhr.statusText}`);
+                            console.log(`Attempt ${attempt}: Data sent via Telegram API: ${JSON.stringify(data)}`);
+                            winners.forEach(winner => {
+                                const userXhr = new XMLHttpRequest();
+                                userXhr.open('POST', url, true);
+                                userXhr.setRequestHeader('Content-Type', 'application/json');
+                                userXhr.onreadystatechange = function () {
+                                    if (userXhr.readyState === 4 && userXhr.status === 200) {
+                                        console.log(`Attempt ${attempt}: Notification sent to user_id=${winner.user_id}`);
                                     }
-                                }
-                            };
-                            userXhr.send(JSON.stringify({
-                                chat_id: data.user_id,
-                                text: `✨ Ура! Ты выиграл: ${data.prize}! 🎰 Продолжай крутить удачу в Baboss Casino! 😎`
-                            }));
-                        } else {
-                            console.log(`Attempt ${attempt}: Failed to send via Telegram API: ${xhr.status} ${xhr.statusText}`);
-                            if (attempt < maxAttempts) {
-                                setTimeout(() => sendViaTelegramApi(data, attempt + 1, maxAttempts), 2000);
-                            }
+                                };
+                                userXhr.send(JSON.stringify({
+                                    chat_id: winner.user_id,
+                                    text: `✨ Ура! Ты выиграл: ${winner.prize}! 🎰 Продолжай крутить удачу в Baboss Casino! 😎`
+                                }));
+                            });
+                        } else if (attempt < maxAttempts) {
+                            setTimeout(() => sendViaTelegramApi(data, attempt + 1, maxAttempts), 2000);
                         }
                     }
                 };
@@ -340,7 +392,6 @@
                 return false;
             }
             try {
-                data.wheel_type = wheel_type;
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
                 return true;
@@ -356,7 +407,6 @@
         // Send data via postMessage
         function sendViaPostMessage(data, attempt = 1, maxAttempts = 3) {
             try {
-                data.wheel_type = wheel_type;
                 window.parent.postMessage(JSON.stringify(data), '*');
                 console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
                 return true;
@@ -369,21 +419,30 @@
             }
         }
 
-        // Send web app data with spin_key and wheel_type
-        function sendWebAppData(data) {
-            data.user_id = user_id;
-            data.ticket_number = ticket_number;
-            data.ticket_topic_id = ticket_topic_id;
-            data.spin_key = spin_key;
-            data.wheel_type = wheel_type;
+        // Send web app data for raffle winners
+        function sendWebAppData() {
+            const data = { raffle_id: raffle_id, winners: winners, wheel_type: wheel_type };
             const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
-                localStorage.setItem(spunKey, 'true');
+                localStorage.setItem('spun_' + raffle_id, 'true');
             } else {
                 console.log("All attempts to send data failed");
+            }
+            closeButton.style.display = 'block';
+        }
+
+        // Send data for individual spin
+        function sendIndividualSpinData(prize) {
+            const data = { prize: prize, user_id: user_id, ticket_number: ticket_number, ticket_topic_id: ticket_topic_id, spin_key: spin_key, wheel_type: wheel_type };
+            const sentViaTelegramApi = sendViaTelegramApi(data);
+            const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
+            const sentViaPostMessage = sendViaPostMessage(data);
+            if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
+                console.log("Individual spin data sent successfully");
+                localStorage.setItem('spun_' + spin_key, 'true');
             }
             closeButton.style.display = 'block';
         }
@@ -400,56 +459,75 @@
             wheel.style.transition = 'transform 5s cubic-bezier(0.22, 0.92, 0.7, 1.0)';
             wheel.classList.remove('stop');
 
-            // Choose the sector index based on ordered weights
-            const totalWeight = orderedWeights.reduce((a, b) => a + b, 0);
-            let random = Math.random() * totalWeight;
-            let randomIndex = 0;
-            for (let i = 0; i < orderedWeights.length; i++) {
-                random -= orderedWeights[i];
-                if (random <= 0) {
-                    randomIndex = i;
-                    break;
-                }
-            }
+            if (raffle_id) {
+                // For raffle mode, simulate wheel spin to show first winner's prize
+                const firstWinner = winners[0];
+                const prize = firstWinner ? firstWinner.prize : orderedPrizes[0];
+                const prizeIndex = orderedPrizes.indexOf(prize);
+                const sectorStart = prizeIndex * sectorSize;
+                const middleOffset = 27.5;
+                const safeStart = safeZone;
+                const safeEnd = sectorSize - safeZone;
+                const theta = sectorStart + middleOffset + (Math.random() * (safeEnd - safeStart - 20) + (safeStart - middleOffset + 10));
+                const pointerAngle = 180;
+                let targetRotation = (pointerAngle - theta) % 360;
+                if (targetRotation < 0) targetRotation += 360;
+                const minFullSpins = 3;
+                const extraFullSpins = Math.floor(Math.random() * 3 + 3);
+                const fullSpins = (minFullSpins + extraFullSpins) * 360;
+                const totalRotation = targetRotation + fullSpins + currentAngle;
+                wheel.style.transform = `rotate(${totalRotation}deg)`;
+                currentAngle = totalRotation % 360;
 
-            // Get the prize from the opposite sector
-            const oppositeIndex = (randomIndex + 4) % 8;
-            const prize = orderedPrizes[oppositeIndex];
-
-            // Calculate the target theta for the chosen sector (centered around text angle)
-            const sectorStart = randomIndex * sectorSize;
-            const middleOffset = 27.5;
-            const safeStart = safeZone;
-            const safeEnd = sectorSize - safeZone;
-            const theta = sectorStart + middleOffset + (Math.random() * (safeEnd - safeStart - 20) + (safeStart - middleOffset + 10));
-
-            // Pointer is at 180 degrees (left side)
-            const pointerAngle = 180;
-            let targetRotation = (pointerAngle - theta) % 360;
-            if (targetRotation < 0) targetRotation += 360;
-
-            // Add full spins for animation
-            const minFullSpins = 3;
-            const extraFullSpins = Math.floor(Math.random() * 3 + 3);
-            const fullSpins = (minFullSpins + extraFullSpins) * 360;
-
-            // Total rotation
-            const totalRotation = targetRotation + fullSpins + currentAngle;
-            wheel.style.transform = `rotate(${totalRotation}deg)`;
-            currentAngle = totalRotation % 360;
-
-            // After animation
-            setTimeout(() => {
-                wheel.classList.add('stop');
-
-                resultDiv.style.opacity = '0';
                 setTimeout(() => {
-                    resultDiv.innerHTML = `Ты выиграл: ${prize}`;
-                    resultDiv.style.opacity = '1';
-                    sendWebAppData({ prize: prize, wheel_type: wheel_type });
-                }, 100);
-                isSpinning = false;
-            }, 5000);
+                    wheel.classList.add('stop');
+                    resultDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        displayWinners();
+                        sendWebAppData();
+                    }, 100);
+                    isSpinning = false;
+                }, 5000);
+            } else {
+                // Individual spin logic
+                const totalWeight = orderedWeights.reduce((a, b) => a + b, 0);
+                let random = Math.random() * totalWeight;
+                let randomIndex = 0;
+                for (let i = 0; i < orderedWeights.length; i++) {
+                    random -= orderedWeights[i];
+                    if (random <= 0) {
+                        randomIndex = i;
+                        break;
+                    }
+                }
+                const oppositeIndex = (randomIndex + 4) % 8;
+                const prize = orderedPrizes[oppositeIndex];
+                const sectorStart = randomIndex * sectorSize;
+                const middleOffset = 27.5;
+                const safeStart = safeZone;
+                const safeEnd = sectorSize - safeZone;
+                const theta = sectorStart + middleOffset + (Math.random() * (safeEnd - safeStart - 20) + (safeStart - middleOffset + 10));
+                const pointerAngle = 180;
+                let targetRotation = (pointerAngle - theta) % 360;
+                if (targetRotation < 0) targetRotation += 360;
+                const minFullSpins = 3;
+                const extraFullSpins = Math.floor(Math.random() * 3 + 3);
+                const fullSpins = (minFullSpins + extraFullSpins) * 360;
+                const totalRotation = targetRotation + fullSpins + currentAngle;
+                wheel.style.transform = `rotate(${totalRotation}deg)`;
+                currentAngle = totalRotation % 360;
+
+                setTimeout(() => {
+                    wheel.classList.add('stop');
+                    resultDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        resultDiv.innerHTML = `Ты выиграл: ${prize}`;
+                        resultDiv.style.opacity = '1';
+                        sendIndividualSpinData(prize);
+                    }, 100);
+                    isSpinning = false;
+                }, 5000);
+            }
         });
 
         // Close button handler
