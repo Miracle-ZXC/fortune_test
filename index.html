@@ -212,21 +212,22 @@
         const closeButton = document.getElementById('closeButton');
         const sectorText = document.getElementById('sectorText');
 
-        // Define prizes and weights for each wheel type
+        // Define prizes for each wheel type in the order matching the visual placement
         const wheelPrizes = {
-            '1': ["20 FS", "500 ₽", "40 FS", "1000 ₽", "60 FS", "1500 ₽", "100 FS", "3000 ₽"],
-            '2': ["30 FS", "750 ₽", "50 FS", "1500 ₽", "80 FS", "2000 ₽", "120 FS", "4000 ₽"],
-            '3': ["40 FS", "1000 ₽", "60 FS", "2000 ₽", "100 FS", "2500 ₽", "150 FS", "5000 ₽"],
-            '4': ["50 FS", "1250 ₽", "70 FS", "2500 ₽", "120 FS", "3000 ₽", "200 FS", "6000 ₽"],
-            '5': ["60 FS", "1500 ₽", "80 FS", "3000 ₽", "150 FS", "4000 ₽", "250 FS", "7500 ₽"]
+            '1': ["500 ₽", "20 FS", "3000 ₽", "100 FS", "1500 ₽", "60 FS", "1000 ₽", "40 FS"],
+            '2': ["750 ₽", "30 FS", "4000 ₽", "120 FS", "2000 ₽", "80 FS", "1500 ₽", "50 FS"],
+            '3': ["1000 ₽", "40 FS", "5000 ₽", "150 FS", "2500 ₽", "100 FS", "2000 ₽", "60 FS"],
+            '4': ["1250 ₽", "50 FS", "6000 ₽", "200 FS", "3000 ₽", "120 FS", "2500 ₽", "70 FS"],
+            '5': ["1500 ₽", "60 FS", "7500 ₽", "250 FS", "4000 ₽", "150 FS", "3000 ₽", "80 FS"]
         };
 
+        // Define weights for each wheel type
         const wheelWeights = {
-            '1': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015],
-            '2': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015],
-            '3': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015],
-            '4': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015],
-            '5': [0.4, 0.4, 0.05, 0.05, 0.035, 0.035, 0.015, 0.015]
+            '1': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
+            '2': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
+            '3': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
+            '4': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05],
+            '5': [0.4, 0.4, 0.015, 0.015, 0.035, 0.035, 0.05, 0.05]
         };
 
         const colors = ["#2e3a3e", "#d81b7a", "#ff6f20", "#ffeb3b", "#4caf50", "#26c6da", "#3f51b5", "#ab47bc"];
@@ -242,14 +243,14 @@
         const ticket_topic_id = urlParams.get('ticket_topic_id') || 'unknown';
         const spin_key = urlParams.get('spin_key') || 'unknown';
         const wheel_type = urlParams.get('wheel_type') || '1';
-        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8';
+        const bot_token = '7936642359:AAEbTgAWbOUawBQnLSTTKiJJLRodOUOGgS8'; // Note: This is insecure; ideally, move to server-side
         const operator_group_id = '-1002519162293';
 
-        // Set prizes and weights based on wheel_type
+        // Set prizes based on wheel_type
         const prizes = wheelPrizes[wheel_type] || wheelPrizes['1'];
         const weights = wheelWeights[wheel_type] || wheelWeights['1'];
 
-        // Dynamically create sector text with precise alignment
+        // Dynamically create sector text
         const angles = [27.5, 72.5, 117.5, 162.5, 207.5, 252.5, 297.5, 342.5];
         prizes.forEach((prize, index) => {
             const span = document.createElement('span');
@@ -268,7 +269,7 @@
             }
         });
 
-        // Check if this spin_key has already been used
+        // Check if this spin_key has already been used locally
         const spunKey = 'spun_' + spin_key;
         if (localStorage.getItem(spunKey)) {
             spinButton.disabled = true;
@@ -335,7 +336,7 @@
                 return false;
             }
             try {
-                data.wheel_type = wheel_type;
+                data.wheel_type = wheel_type; // Include wheel_type in the data sent
                 window.Telegram.WebApp.sendData(JSON.stringify(data));
                 console.log(`Attempt ${attempt}: Data sent via sendData: ${JSON.stringify(data)}`);
                 return true;
@@ -351,7 +352,7 @@
         // Send data via postMessage
         function sendViaPostMessage(data, attempt = 1, maxAttempts = 3) {
             try {
-                data.wheel_type = wheel_type;
+                data.wheel_type = wheel_type; // Include wheel_type in the data sent
                 window.parent.postMessage(JSON.stringify(data), '*');
                 console.log(`Attempt ${attempt}: Data sent via postMessage: ${JSON.stringify(data)}`);
                 return true;
@@ -364,18 +365,19 @@
             }
         }
 
-        // Send web app data
+        // Send web app data with spin_key and wheel_type
         function sendWebAppData(data) {
             data.user_id = user_id;
             data.ticket_number = ticket_number;
             data.ticket_topic_id = ticket_topic_id;
             data.spin_key = spin_key;
-            data.wheel_type = wheel_type;
+            data.wheel_type = wheel_type; // Ensure wheel_type is included
             const sentViaTelegramApi = sendViaTelegramApi(data);
             const sentViaTelegramWebApp = sendViaTelegramWebApp(data);
             const sentViaPostMessage = sendViaPostMessage(data);
             if (sentViaTelegramApi || sentViaTelegramWebApp || sentViaPostMessage) {
                 console.log("Data sent successfully via at least one method");
+                // Mark as spun in localStorage to prevent reload spins
                 localStorage.setItem(spunKey, 'true');
             } else {
                 console.log("All attempts to send data failed");
@@ -430,7 +432,7 @@
                 setTimeout(() => {
                     resultDiv.innerHTML = `Ты выиграл: ${prize}`;
                     resultDiv.style.opacity = '1';
-                    sendWebAppData({ prize: prize });
+                    sendWebAppData({ prize: prize, wheel_type: wheel_type });
                 }, 100);
                 isSpinning = false;
             }, 5000);
